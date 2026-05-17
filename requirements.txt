@@ -1,0 +1,8 @@
+openpyxl>=3.1.0
+Jinja2>=3.1.0
+rich>=13.7.0
+textual>=0.79.1
+questionary>=2.0.1
+PyYAML>=6.0
+click>=8.1.0
+pytest>=7.4.0
