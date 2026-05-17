@@ -81,5 +81,15 @@ def validate_intent(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}' "
                 f"uses profile '{iface.port_profile}' which requires a voice VLAN, but none is set."
             )
+        if profile_data.get("requires_native_vlan") and iface.native_vlan is None:
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}' "
+                f"uses profile '{iface.port_profile}' which requires a native VLAN, but none is set."
+            )
+        if iface.native_vlan is not None and iface.native_vlan not in vlan_ids:
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}': "
+                f"native VLAN {iface.native_vlan} is not defined in the VLANs sheet."
+            )
 
     return errors

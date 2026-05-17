@@ -83,6 +83,7 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
             template_hint = profile_data.get("template_hint", "")
         access_vlan_raw = _cell_value(ws, row, headers.get("access_vlan", 5))
         voice_vlan_raw = _cell_value(ws, row, headers.get("voice_vlan", 6))
+        native_vlan_raw = _cell_value(ws, row, headers.get("native_vlan", 7))
         interfaces.append(Interface(
             device_name=str(device_name).strip(),
             interface_name=str(_cell_value(ws, row, headers.get("interface_name", 2))).strip(),
@@ -90,6 +91,7 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
             description=str(_cell_value(ws, row, headers.get("description", 4))).strip(),
             access_vlan=int(access_vlan_raw) if access_vlan_raw else None,
             voice_vlan=int(voice_vlan_raw) if voice_vlan_raw else None,
+            native_vlan=int(native_vlan_raw) if native_vlan_raw else None,
             template_hint=template_hint,
         ))
     return interfaces

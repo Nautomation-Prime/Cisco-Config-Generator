@@ -1,13 +1,14 @@
 ! ============================================================
-! Trunk Port Configuration
+! Access Point Trunk Port Configuration
 ! ============================================================
 !
 {% for iface in interfaces %}
 interface {{ iface.interface_name }}
- description {{ iface.description if iface.description else '** Uplink **' }}
+ description {{ iface.description if iface.description else '** WAP Trunk **' }}
  switchport mode trunk
  switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else settings.defaults.native_vlan | default(1, true) }}
  switchport trunk allowed vlan all
+ spanning-tree portfast trunk
  no shutdown
 !
 {% endfor %}

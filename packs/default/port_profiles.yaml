@@ -5,9 +5,15 @@ profiles:
     template_hint: interfaces_access
 
   access-ap:
-    description: "Wireless access point port"
+    description: "Wireless access point port (access mode)"
     requires_vlan: true
     template_hint: interfaces_access
+
+  access-ap-trunk:
+    description: "Wireless access point port (trunk mode — native VLAN is the AP VLAN)"
+    requires_vlan: false
+    requires_native_vlan: true
+    template_hint: interfaces_ap_trunk
 
   access-voip:
     description: "VoIP phone port (data + voice VLAN)"

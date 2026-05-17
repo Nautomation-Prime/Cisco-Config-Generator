@@ -32,6 +32,7 @@ class Interface:
     description: str = ""
     access_vlan: int | None = None
     voice_vlan: int | None = None
+    native_vlan: int | None = None
     template_hint: str = ""
 
 

@@ -15,6 +15,10 @@ template_map:
     template: interfaces_trunk.j2
     order: 30
 
+  interfaces_ap_trunk:
+    template: interfaces_ap_trunk.j2
+    order: 30
+
   interfaces_unused:
     template: interfaces_unused.j2
     order: 30
