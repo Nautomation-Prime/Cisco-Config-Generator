@@ -41,7 +41,12 @@ class GlobalSettings:
     domain_name: str = ""
     ntp_servers: list[str] = field(default_factory=list)
     dns_servers: list[str] = field(default_factory=list)
-    snmp_community: str = ""
+    snmp_v3_group: str = ""
+    snmp_v3_user: str = ""
+    snmp_v3_auth_protocol: str = "SHA"
+    snmp_v3_auth_password: str = ""
+    snmp_v3_priv_protocol: str = "AES 128"
+    snmp_v3_priv_password: str = ""
     snmp_host: str = ""
     syslog_server: str = ""
     banner_motd: str = "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."

@@ -76,11 +76,12 @@ logging console critical
 logging host {{ global.syslog_server }}
 {% endif %}
 !
-! --- SNMP ---
-{% if global.snmp_community %}
-snmp-server community {{ global.snmp_community }} RO
+! --- SNMP v3 ---
+{% if global.snmp_v3_user %}
+snmp-server group {{ global.snmp_v3_group if global.snmp_v3_group else 'MONITORING' }} v3 priv
+snmp-server user {{ global.snmp_v3_user }} {{ global.snmp_v3_group if global.snmp_v3_group else 'MONITORING' }} v3 auth {{ global.snmp_v3_auth_protocol }} {{ global.snmp_v3_auth_password }} priv {{ global.snmp_v3_priv_protocol }} {{ global.snmp_v3_priv_password }}
 {% if global.snmp_host %}
-snmp-server host {{ global.snmp_host }} version 2c {{ global.snmp_community }}
+snmp-server host {{ global.snmp_host }} version 3 priv {{ global.snmp_v3_user }}
 {% endif %}
 snmp-server enable traps
 {% endif %}

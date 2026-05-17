@@ -129,7 +129,7 @@ def create_instructions_sheet(wb: Workbook) -> None:
     guide = [
         ("Sheet", "What to fill in"),
         ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Each device needs a unique Hostname, Management IP, VLAN, and Default Gateway."),
-        ("Global Settings", "Settings shared across all devices — NTP servers, DNS, SNMP community, AAA server, login banner. NTP and DNS accept comma-separated values."),
+        ("Global Settings", "Settings shared across all devices — NTP servers, DNS, SNMPv3 credentials (group, user, auth/priv protocols and passwords), trap receiver, AAA server, login banner. NTP and DNS accept comma-separated values."),
         ("VLANs", "Define all VLANs for the site. VLAN IDs entered here automatically appear in the Access VLAN and Voice VLAN dropdowns on the Interfaces sheet."),
         ("Interfaces", "One row per port per device. Pick a Port Profile (dropdown) and add a description. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN; access ports use Access/Voice VLAN."),
         ("Feature Selection", "Toggle which config sections to generate (Yes/No). Useful if you only need to regenerate interface configs, for example."),
@@ -229,7 +229,12 @@ def create_global_settings_sheet(wb: Workbook) -> None:
         ("domain_name", "example.local"),
         ("ntp_servers", "10.0.0.1, 10.0.0.2"),
         ("dns_servers", "8.8.8.8, 8.8.4.4"),
-        ("snmp_community", "public"),
+        ("snmp_v3_group", "MONITORING"),
+        ("snmp_v3_user", "snmpuser"),
+        ("snmp_v3_auth_protocol", "SHA"),
+        ("snmp_v3_auth_password", "changeme_auth"),
+        ("snmp_v3_priv_protocol", "AES"),
+        ("snmp_v3_priv_password", "changeme_priv"),
         ("snmp_host", "10.0.0.5"),
         ("syslog_server", "10.0.0.6"),
         ("banner_motd", "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."),
@@ -239,6 +244,12 @@ def create_global_settings_sheet(wb: Workbook) -> None:
         ("aaa_server", ""),
         ("aaa_key", ""),
     ]
+    # Row indices for protocol fields (1-indexed header + 0-indexed rows list)
+    # snmp_v3_auth_protocol is index 5 (0-based) → data row = 5+2 = 7
+    # snmp_v3_priv_protocol is index 7 (0-based) → data row = 7+2 = 9
+    AUTH_PROTOCOL_KEYS = {"snmp_v3_auth_protocol"}
+    PRIV_PROTOCOL_KEYS = {"snmp_v3_priv_protocol"}
+
     for i, row_data in enumerate(rows):
         ws.append(row_data)
         r = ws.max_row
@@ -251,6 +262,16 @@ def create_global_settings_sheet(wb: Workbook) -> None:
             cell.alignment = Alignment(vertical="center")
         ws.cell(row=r, column=1).font = BOLD_FONT
         ws.row_dimensions[r].height = 18
+        # Add protocol dropdowns inline on the specific rows
+        key = row_data[0]
+        if key in AUTH_PROTOCOL_KEYS:
+            dv = DataValidation(type="list", formula1='"SHA,MD5"', allow_blank=False, showDropDown=False)
+            ws.add_data_validation(dv)
+            dv.sqref = f"B{r}"
+        elif key in PRIV_PROTOCOL_KEYS:
+            dv = DataValidation(type="list", formula1='"AES,DES"', allow_blank=False, showDropDown=False)
+            ws.add_data_validation(dv)
+            dv.sqref = f"B{r}"
 
 
 # -----------------------------------------------------------------------
