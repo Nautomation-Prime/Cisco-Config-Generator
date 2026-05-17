@@ -1,0 +1,20 @@
+template_map:
+  base_config:
+    template: base.j2
+    order: 10
+
+  vlans:
+    template: vlans.j2
+    order: 20
+
+  interfaces_access:
+    template: interfaces_access.j2
+    order: 30
+
+  interfaces_trunk:
+    template: interfaces_trunk.j2
+    order: 30
+
+  interfaces_unused:
+    template: interfaces_unused.j2
+    order: 30

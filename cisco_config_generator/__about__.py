@@ -1,0 +1,5 @@
+__title__ = "cisco-config-generator"
+__description__ = "Cisco IOS-XE access switch configuration generator"
+__version__ = "0.1.0"
+__author__ = "Nautomation Prime"
+__license__ = "MIT"

@@ -1,0 +1,12 @@
+features:
+  - name: base_config
+    description: "Base switch configuration (hostname, AAA, NTP, SNMP, STP, hardening)"
+    enabled_by_default: true
+
+  - name: vlans
+    description: "VLAN definitions"
+    enabled_by_default: true
+
+  - name: interfaces
+    description: "Interface configuration (access, trunk, and unused ports)"
+    enabled_by_default: true

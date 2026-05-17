@@ -1,0 +1,61 @@
+switch_models:
+  C9200-48P:
+    description: "Catalyst 9200 48-port PoE+"
+    access_ports: 48
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+  C9200-24P:
+    description: "Catalyst 9200 24-port PoE+"
+    access_ports: 24
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+  C9300-48P:
+    description: "Catalyst 9300 48-port PoE+"
+    access_ports: 48
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+  C9300-24P:
+    description: "Catalyst 9300 24-port PoE+"
+    access_ports: 24
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+  C2960X-48FPD-L:
+    description: "Catalyst 2960X 48-port PoE+"
+    access_ports: 48
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+  C2960X-24PD-L:
+    description: "Catalyst 2960X 24-port PoE+"
+    access_ports: 24
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
+uplink_modules:
+  NM-4X:
+    description: "4-port 10G SFP+ uplink module"
+    uplink_ports: 4
+    interface_prefix: "TenGigabitEthernet1/1/"
+    uplink_port_start: 1
+
+  NM-8X:
+    description: "8-port 10G SFP+ uplink module"
+    uplink_ports: 8
+    interface_prefix: "TenGigabitEthernet1/1/"
+    uplink_port_start: 1
+
+  C9200-NM-4X:
+    description: "C9200 4-port 10G SFP+ uplink module"
+    uplink_ports: 4
+    interface_prefix: "TenGigabitEthernet1/1/"
+    uplink_port_start: 1
+
+  NONE:
+    description: "No uplink module"
+    uplink_ports: 0
+    interface_prefix: ""
+    uplink_port_start: 1

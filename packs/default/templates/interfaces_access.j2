@@ -1,0 +1,17 @@
+! ============================================================
+! Access Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Access Port **' }}
+ switchport mode access
+ switchport access vlan {{ iface.access_vlan }}
+{% if iface.voice_vlan %}
+ switchport voice vlan {{ iface.voice_vlan }}
+{% endif %}
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endfor %}
