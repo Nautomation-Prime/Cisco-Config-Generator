@@ -1,0 +1,13 @@
+! ============================================================
+! Trunk Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Uplink **' }}
+ switchport mode trunk
+ switchport trunk native vlan {{ settings.defaults.native_vlan | default(1, true) }}
+ switchport trunk allowed vlan all
+ no shutdown
+!
+{% endfor %}
