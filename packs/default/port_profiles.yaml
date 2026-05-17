@@ -1,0 +1,26 @@
+profiles:
+  access-user:
+    description: "Standard user access port"
+    requires_vlan: true
+    template_hint: interfaces_access
+
+  access-ap:
+    description: "Wireless access point port"
+    requires_vlan: true
+    template_hint: interfaces_access
+
+  access-voip:
+    description: "VoIP phone port (data + voice VLAN)"
+    requires_vlan: true
+    requires_voice_vlan: true
+    template_hint: interfaces_access
+
+  trunk-uplink:
+    description: "Trunk uplink to distribution or core"
+    requires_vlan: false
+    template_hint: interfaces_trunk
+
+  unused:
+    description: "Unused / disabled port"
+    requires_vlan: false
+    template_hint: interfaces_unused

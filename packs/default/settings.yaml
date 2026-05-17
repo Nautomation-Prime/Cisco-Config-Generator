@@ -1,0 +1,9 @@
+schema_version: "1.0"
+log_level: INFO
+strict_validation: true
+
+defaults:
+  unused_vlan: 999
+  native_vlan: 1
+  timezone: GMT
+  mgmt_subnet: "255.255.255.0"
