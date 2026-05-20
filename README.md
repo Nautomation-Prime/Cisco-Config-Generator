@@ -57,6 +57,50 @@ Generated configs are written to `output\<hostname>.cfg`.
 
 ---
 
+## CLI Reference
+
+```
+run.bat [OPTIONS]
+python_runtime\python.exe -m cisco_config_generator [OPTIONS]
+
+Options:
+  -p, --pack TEXT       Pack name (folder under packs/) or full path  [default: default]
+  -w, --workbook PATH   Path to the intent workbook (.xlsx)
+  -o, --output TEXT     Directory to write generated config files     [default: output]
+  --no-tui              Run headless without the interactive TUI
+  --version             Print version and exit
+```
+
+---
+
+## ACL Workflow
+
+ACLs are defined in the **ACLs** sheet and referenced by name in **Global Settings**.
+
+**Step 1 — Define ACLs in the ACLs sheet:**
+
+| ACL Name | Remark | Action | Network/Host | Wildcard |
+|----------|--------|--------|--------------|----------|
+| ACL_VTY_ACCESS | Management hosts | permit | 10.0.0.0 | 0.0.0.255 |
+| ACL_VTY_ACCESS | | deny | any | |
+| ACL_SNMP_RO_ACCESS | NMS server | permit | 10.1.1.100 | |
+| ACL_SNMP_RO_ACCESS | | deny | any | |
+
+- Leave **Wildcard** blank for host entries (`permit 10.1.1.100`) or `deny any`
+- Add a **Remark** row (no Action/Network) before permit/deny lines for readability
+
+**Step 2 — Reference ACL names in Global Settings:**
+
+| Setting | Example Value |
+|---------|---------------|
+| `vty_acl` | ACL_VTY_ACCESS |
+| `snmp_ro_acl` | ACL_SNMP_RO_ACCESS |
+| `snmp_rw_acl` | ACL_SNMP_RW_ACCESS |
+
+The generator validates that every ACL name referenced in Global Settings is defined in the ACLs sheet. To disable ACL generation entirely, set **ACLs → No** in the Feature Selection sheet.
+
+---
+
 ## Excel Workbook Sheets
 
 | Sheet | Purpose |
