@@ -26,12 +26,15 @@ Excel intent → Python core → Jinja2 templates → per-device .cfg files
 setup.bat
 ```
 
-This checks for Python 3.10+, creates a virtual environment, and installs all dependencies.
+This downloads a portable Python 3.12 runtime and installs all dependencies.
+Internet connection required (one-time only).
 
 ### 2. Generate the intent workbook template
 
+The workbook template is auto-generated on first run. To regenerate it manually:
+
 ```bat
-.venv\Scripts\python.exe scripts\generate_workbook.py
+python_runtime\python.exe scripts\generate_workbook.py
 ```
 
 This creates `assets/workbook_template.xlsx`. Open it, fill in your intent, and save.
@@ -47,7 +50,7 @@ The interactive TUI will launch. Select your pack, point to your workbook, and c
 ### Headless (no TUI)
 
 ```bat
-.venv\Scripts\python.exe -m cisco_config_generator --no-tui --workbook assets\workbook_template.xlsx
+python_runtime\python.exe -m cisco_config_generator --no-tui --workbook assets\workbook_template.xlsx
 ```
 
 Generated configs are written to `output\<hostname>.cfg`.
@@ -59,9 +62,10 @@ Generated configs are written to `output\<hostname>.cfg`.
 | Sheet | Purpose |
 |-------|---------|
 | **Devices** | One row per switch — hostname, IP, model, uplink module |
-| **Global Settings** | Shared settings — NTP, DNS, SNMP, banner, AAA |
+| **Global Settings** | Shared settings — NTP, DNS, SNMP, banner, AAA, ACL names |
 | **VLANs** | VLAN ID, name, description |
 | **Interfaces** | Per-device per-port intent — profile selection + description |
+| **ACLs** | Standard ACL entries — name, remark, action, network/host, wildcard |
 | **Feature Selection** | Toggle which config sections to generate (Yes/No) |
 
 ---
@@ -78,10 +82,15 @@ packs/default/
 ├─ template_map.yaml      # Maps profiles/features to Jinja2 templates
 ├─ features.yaml          # Feature toggle defaults
 └─ templates/
+   ├─ acls.j2
    ├─ base.j2
    ├─ vlans.j2
    ├─ interfaces_access.j2
+   ├─ interfaces_access_server.j2
    ├─ interfaces_trunk.j2
+   ├─ interfaces_trunk_portchannel.j2
+   ├─ interfaces_trunk_server.j2
+   ├─ interfaces_ap_trunk.j2
    └─ interfaces_unused.j2
 ```
 
@@ -98,12 +107,14 @@ All Jinja2 templates receive:
 
 ```python
 {
-    "device":    Device,           # hostname, mgmt_ip, model, timezone...
-    "vlans":     [VLAN],           # full VLAN list
-    "interfaces": [Interface],     # interfaces for this device (filtered per template group)
-    "global":    GlobalSettings,   # NTP, SNMP, AAA, banner...
-    "hardware":  HardwareProfile,  # port counts and interface naming
-    "settings":  {"defaults": {}}  # pack defaults (unused_vlan, native_vlan)
+    "device":     Device,           # hostname, mgmt_ip, model, timezone...
+    "vlans":      [VLAN],           # full VLAN list
+    "interfaces": [Interface],      # interfaces for this device (filtered per template group)
+    "global":     GlobalSettings,   # NTP, SNMP, AAA, banner, ACL names...
+    "hardware":   HardwareProfile,  # port counts and interface naming
+    "acls":       [ACLEntry],       # all ACL entries (for acls.j2)
+    "features":   FeatureSelection, # feature flags (base_config, vlans, interfaces, acls)
+    "settings":   {"defaults": {}}  # pack defaults (unused_vlan, native_vlan)
 }
 ```
 
@@ -133,28 +144,36 @@ Supported switch models and uplink modules are defined in `hardware_catalog.yaml
 
 ## Port Profiles
 
-| Profile | Type | VLAN Required |
-|---------|------|---------------|
-| `access-user` | Access | Yes |
-| `access-ap` | Access (WAP) | Yes |
-| `access-voip` | Access + Voice VLAN | Yes |
-| `trunk-uplink` | Trunk | No |
-| `unused` | Disabled | No |
+| Profile | Type | Notes |
+|---------|------|-------|
+| `access-user` | Access | Standard PC port |
+| `access-voip` | Access + Voice VLAN | Data + voice VLAN, QoS DSCP trust |
+| `access-printer` | Access | Printer port |
+| `access-video` | Access | Video device, QoS DSCP trust |
+| `access-special` | Access | Special purpose |
+| `access-control` | Access | Door entry / access control |
+| `access-server` | Access | Server port |
+| `access-ap` | Access | Wireless AP (access mode) |
+| `access-ap-trunk` | Trunk | Wireless AP (trunk mode, native VLAN = AP VLAN) |
+| `trunk-uplink` | Trunk | Uplink to core/distribution |
+| `trunk-uplink-portchannel` | Trunk + Port-Channel | Uplink with port-channel |
+| `trunk-server` | Trunk | Server trunk port |
+| `unused` | Disabled | Unused/shutdown port |
 
 ---
 
 ## Running Tests
 
 ```bat
-.venv\Scripts\python.exe -m pytest tests/ -v
+python_runtime\python.exe -m pytest tests/ -v
 ```
 
 ---
 
 ## Requirements
 
-- Python 3.10+
 - Windows (launcher scripts are `.bat`)
+- Internet connection for first-time setup (downloads portable Python 3.12)
 - See `requirements.txt` for Python dependencies
 
 ---

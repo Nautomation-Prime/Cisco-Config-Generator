@@ -51,10 +51,10 @@ class Orchestrator:
         if errors:
             raise ValidationError(errors)
 
-        jinja_env = create_jinja_env(pack.pack_path / "templates")
+        jinja_env = create_jinja_env(pack.templates_dir)
         registry = TemplateRegistry(
             template_map=pack.template_map,
-            templates_dir=pack.pack_path / "templates",
+            templates_dir=pack.templates_dir,
         )
 
         written: list[Path] = []
@@ -120,6 +120,8 @@ class Orchestrator:
             "interfaces": device_interfaces,
             "global": intent.global_settings,
             "hardware": hardware,
+            "acls": intent.acls,
+            "features": features,
             "settings": {"defaults": {
                 "unused_vlan": pack.settings.get("unused_vlan", 999),
                 "native_vlan": pack.settings.get("native_vlan", 1),
@@ -127,6 +129,12 @@ class Orchestrator:
         }
 
         sections: list[tuple[int, str]] = []  # (order, rendered_text)
+
+        # --- acls ---
+        if features.acls:
+            tmpl, order = registry.resolve("acls")
+            rendered = render_template(jinja_env, tmpl, context)
+            sections.append((order, rendered))
 
         # --- base_config ---
         if features.base_config:

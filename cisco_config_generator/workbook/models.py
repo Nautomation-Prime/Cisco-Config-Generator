@@ -5,6 +5,15 @@ from typing import Any
 
 
 @dataclass
+class ACLEntry:
+    acl_name: str
+    remark: str = ""
+    action: str = ""
+    network: str = ""
+    wildcard: str = ""
+
+
+@dataclass
 class VLAN:
     vlan_id: int
     vlan_name: str
@@ -33,6 +42,8 @@ class Interface:
     access_vlan: int | None = None
     voice_vlan: int | None = None
     native_vlan: int | None = None
+    port_channel_number: int | None = None
+    qos_trust_dscp: bool = False
     template_hint: str = ""
 
 
@@ -41,20 +52,39 @@ class GlobalSettings:
     domain_name: str = ""
     ntp_servers: list[str] = field(default_factory=list)
     dns_servers: list[str] = field(default_factory=list)
-    snmp_v3_group: str = ""
-    snmp_v3_user: str = ""
-    snmp_v3_auth_protocol: str = "SHA"
-    snmp_v3_auth_password: str = ""
-    snmp_v3_priv_protocol: str = "AES 128"
-    snmp_v3_priv_password: str = ""
+    summer_time_config: str = ""
+    # AAA / TACACS+
+    aaa_group_name: str = "AAA_NOC"
+    tacacs_server_1: str = ""
+    tacacs_server_2: str = ""
+    tacacs_key: str = ""
+    aaa_fail_message: str = ""
+    # SNMPv3 — shared protocol settings
+    snmp_auth_protocol: str = "SHA"
+    snmp_priv_protocol: str = "AES"
+    # SNMPv3 — read-only user/group
+    snmp_ro_group: str = "ROGROUP"
+    snmp_ro_user: str = ""
+    snmp_ro_auth_password: str = ""
+    snmp_ro_priv_password: str = ""
+    # SNMPv3 — read-write user/group
+    snmp_rw_group: str = "RWGROUP"
+    snmp_rw_user: str = ""
+    snmp_rw_auth_password: str = ""
+    snmp_rw_priv_password: str = ""
     snmp_host: str = ""
+    snmp_location: str = ""
+    snmp_contact: str = ""
+    # VTY / SNMP ACL names — bodies defined in the ACLs workbook sheet
+    vty_acl: str = "ACL_VTY_ACCESS"
+    snmp_ro_acl: str = "ACL_SNMP_RO_ACCESS"
+    snmp_rw_acl: str = "ACL_SNMP_RW_ACCESS"
+    # Logging / misc
     syslog_server: str = ""
     banner_motd: str = "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."
     enable_secret: str = "changeme"
     local_username: str = ""
     local_password: str = "changeme"
-    aaa_server: str = ""
-    aaa_key: str = ""
 
 
 @dataclass
@@ -62,6 +92,7 @@ class FeatureSelection:
     base_config: bool = True
     vlans: bool = True
     interfaces: bool = True
+    acls: bool = True
 
 
 @dataclass
@@ -83,3 +114,4 @@ class Intent:
     interfaces: list[Interface] = field(default_factory=list)
     global_settings: GlobalSettings = field(default_factory=GlobalSettings)
     feature_selection: FeatureSelection = field(default_factory=FeatureSelection)
+    acls: list[ACLEntry] = field(default_factory=list)

@@ -50,6 +50,7 @@ TAB_GREEN = "375623"
 TAB_ORANGE = "C55A11"
 TAB_PURPLE = "7030A0"
 TAB_TEAL = "0070C0"
+TAB_RED = "C00000"
 
 
 def _border() -> Border:
@@ -129,9 +130,10 @@ def create_instructions_sheet(wb: Workbook) -> None:
     guide = [
         ("Sheet", "What to fill in"),
         ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Each device needs a unique Hostname, Management IP, VLAN, and Default Gateway."),
-        ("Global Settings", "Settings shared across all devices — NTP servers, DNS, SNMPv3 credentials (group, user, auth/priv protocols and passwords), trap receiver, AAA server, login banner. NTP and DNS accept comma-separated values."),
+        ("Global Settings", "Settings shared across all devices — NTP/DNS servers, TACACS+ servers and key, SNMPv3 RO/RW credentials, SNMP host/location/contact, ACL names for VTY and SNMP access (bodies defined in the ACLs sheet), syslog server, banner, enable secret, and local admin credentials."),
         ("VLANs", "Define all VLANs for the site. VLAN IDs entered here automatically appear in the Access VLAN and Voice VLAN dropdowns on the Interfaces sheet."),
         ("Interfaces", "One row per port per device. Pick a Port Profile (dropdown) and add a description. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN; access ports use Access/Voice VLAN."),
+        ("ACLs", "Define IP access control lists used for VTY and SNMP access restriction. One row per ACL entry: ACL Name, optional Remark, Action (permit/deny), Network/Host, and optional Wildcard mask. ACL names must match those set in Global Settings (vty_acl, snmp_ro_acl, snmp_rw_acl)."),
         ("Feature Selection", "Toggle which config sections to generate (Yes/No). Useful if you only need to regenerate interface configs, for example."),
     ]
     for i, (sheet, desc) in enumerate(guide):
@@ -213,8 +215,8 @@ def create_global_settings_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("Global Settings")
     ws.sheet_properties.tabColor = TAB_GREEN
     ws.freeze_panes = "A2"
-    ws.column_dimensions["A"].width = 28
-    ws.column_dimensions["B"].width = 55
+    ws.column_dimensions["A"].width = 30
+    ws.column_dimensions["B"].width = 60
 
     for col, val in enumerate(["Setting", "Value"], start=1):
         cell = ws.cell(row=1, column=col)
@@ -226,29 +228,39 @@ def create_global_settings_sheet(wb: Workbook) -> None:
     ws.row_dimensions[1].height = 25
 
     rows = [
-        ("domain_name", "example.local"),
-        ("ntp_servers", "10.0.0.1, 10.0.0.2"),
-        ("dns_servers", "8.8.8.8, 8.8.4.4"),
-        ("snmp_v3_group", "MONITORING"),
-        ("snmp_v3_user", "snmpuser"),
-        ("snmp_v3_auth_protocol", "SHA"),
-        ("snmp_v3_auth_password", "changeme_auth"),
-        ("snmp_v3_priv_protocol", "AES"),
-        ("snmp_v3_priv_password", "changeme_priv"),
-        ("snmp_host", "10.0.0.5"),
-        ("syslog_server", "10.0.0.6"),
-        ("banner_motd", "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."),
-        ("enable_secret", "changeme"),
-        ("local_username", "admin"),
-        ("local_password", "changeme"),
-        ("aaa_server", ""),
-        ("aaa_key", ""),
+        ("domain_name",             "example.local"),
+        ("ntp_servers",             "10.0.0.1, 10.0.0.2"),
+        ("dns_servers",             "8.8.8.8, 8.8.4.4"),
+        ("summer_time_config",      "BST recurring last Sun Mar 1:00 last Sun Oct 1:00"),
+        ("aaa_group_name",          "AAA_NOC"),
+        ("tacacs_server_1",         ""),
+        ("tacacs_server_2",         ""),
+        ("tacacs_key",              ""),
+        ("aaa_fail_message",        ""),
+        ("snmp_auth_protocol",      "SHA"),
+        ("snmp_priv_protocol",      "AES"),
+        ("snmp_ro_group",           "ROGROUP"),
+        ("snmp_ro_user",            "ROBOOK"),
+        ("snmp_ro_auth_password",   "changeme_auth"),
+        ("snmp_ro_priv_password",   "changeme_priv"),
+        ("snmp_rw_group",           "RWGROUP"),
+        ("snmp_rw_user",            "RWBOOK"),
+        ("snmp_rw_auth_password",   "changeme_auth"),
+        ("snmp_rw_priv_password",   "changeme_priv"),
+        ("snmp_host",               ""),
+        ("snmp_location",           ""),
+        ("snmp_contact",            ""),
+        ("vty_acl",                 "ACL_VTY_ACCESS"),
+        ("snmp_ro_acl",             "ACL_SNMP_RO_ACCESS"),
+        ("snmp_rw_acl",             "ACL_SNMP_RW_ACCESS"),
+        ("syslog_server",           ""),
+        ("banner_motd",             "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."),
+        ("enable_secret",           "changeme"),
+        ("local_username",          "admin"),
+        ("local_password",          "changeme"),
     ]
-    # Row indices for protocol fields (1-indexed header + 0-indexed rows list)
-    # snmp_v3_auth_protocol is index 5 (0-based) → data row = 5+2 = 7
-    # snmp_v3_priv_protocol is index 7 (0-based) → data row = 7+2 = 9
-    AUTH_PROTOCOL_KEYS = {"snmp_v3_auth_protocol"}
-    PRIV_PROTOCOL_KEYS = {"snmp_v3_priv_protocol"}
+    AUTH_PROTOCOL_KEYS = {"snmp_auth_protocol"}
+    PRIV_PROTOCOL_KEYS = {"snmp_priv_protocol"}
 
     for i, row_data in enumerate(rows):
         ws.append(row_data)
@@ -262,7 +274,6 @@ def create_global_settings_sheet(wb: Workbook) -> None:
             cell.alignment = Alignment(vertical="center")
         ws.cell(row=r, column=1).font = BOLD_FONT
         ws.row_dimensions[r].height = 18
-        # Add protocol dropdowns inline on the specific rows
         key = row_data[0]
         if key in AUTH_PROTOCOL_KEYS:
             dv = DataValidation(type="list", formula1='"SHA,MD5"', allow_blank=False, showDropDown=False)
@@ -305,8 +316,8 @@ def create_interfaces_sheet(wb: Workbook) -> None:
     ws.freeze_panes = "A2"
 
     headers = ["Device Name", "Interface Name", "Port Profile",
-               "Description", "Access VLAN", "Voice VLAN", "Native VLAN"]
-    widths = [22, 32, 20, 40, 14, 14, 14]
+               "Description", "Access VLAN", "Voice VLAN", "Native VLAN", "Port Channel No."]
+    widths = [22, 32, 24, 40, 14, 14, 14, 16]
     style_header(ws, headers, widths=widths)
 
     # Device Name — cross-sheet dropdown from Devices!$A (named range)
@@ -319,12 +330,12 @@ def create_interfaces_sheet(wb: Workbook) -> None:
     add_list_validation(ws, col=7, formula="VLANIDs")
 
     example_rows = [
-        ("SW-OFFICE-01", "GigabitEthernet1/0/1",    "access-user",     "PC - Desk 1",      20, "",  ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/2",    "access-voip",     "Phone - Desk 1",   20, 30,  ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap",       "WAP - Lobby",      40, "",  ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/4",    "access-ap-trunk", "WAP - Trunk",      "", "",  40),
-        ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink",    "Uplink to Core",   "", "",  1),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/48",   "unused",          "",                 "", "",  ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/1",    "access-voip",              "CLIENT: PC/Phone - Desk 1",   20, 30,  "",  ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/2",    "access-printer",           "PRINTER: Floor 1",            20, "",  "",  ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap-trunk",          "WAP - Lobby",                 "", "",  40,  ""),
+        ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  1),
+        ("SW-OFFICE-01", "TenGigabitEthernet1/1/2", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  1),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/48",   "unused",                   "",                            "", "",  "",  ""),
     ]
     for i, row_data in enumerate(example_rows):
         ws.append(row_data)
@@ -332,7 +343,35 @@ def create_interfaces_sheet(wb: Workbook) -> None:
 
 
 # -----------------------------------------------------------------------
-# Sheet 5 — Feature Selection
+# Sheet 5 — ACLs
+# -----------------------------------------------------------------------
+def create_acls_sheet(wb: Workbook) -> None:
+    ws = wb.create_sheet("ACLs")
+    ws.sheet_properties.tabColor = TAB_RED
+    ws.freeze_panes = "A2"
+
+    headers = ["ACL Name", "Remark", "Action", "Network/Host", "Wildcard"]
+    widths = [28, 40, 12, 22, 18]
+    style_header(ws, headers, widths=widths)
+
+    add_list_validation(ws, col=3, formula='"permit,deny"', start_row=2, end_row=300)
+
+    example_rows = [
+        ("ACL_VTY_ACCESS",      "Management network",   "permit", "10.0.0.0",  "0.0.0.255"),
+        ("ACL_VTY_ACCESS",      "Jump host",            "permit", "10.0.1.10", ""),
+        ("ACL_VTY_ACCESS",      "Deny all others",      "deny",   "any",       ""),
+        ("ACL_SNMP_RO_ACCESS",  "NMS server",           "permit", "10.0.1.20", ""),
+        ("ACL_SNMP_RO_ACCESS",  "Deny all others",      "deny",   "any",       ""),
+        ("ACL_SNMP_RW_ACCESS",  "NMS server",           "permit", "10.0.1.20", ""),
+        ("ACL_SNMP_RW_ACCESS",  "Deny all others",      "deny",   "any",       ""),
+    ]
+    for i, row_data in enumerate(example_rows):
+        ws.append(row_data)
+        apply_row_style(ws, ws.max_row, len(headers), alt=(i % 2 == 1))
+
+
+# -----------------------------------------------------------------------
+# Sheet 6 — Feature Selection
 # -----------------------------------------------------------------------
 def create_feature_selection_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("Feature Selection")
@@ -346,6 +385,7 @@ def create_feature_selection_sheet(wb: Workbook) -> None:
         ("base_config", "Yes", "Base switch config — hostname, AAA, NTP, SNMP, STP, SSH hardening"),
         ("vlans",       "Yes", "VLAN definitions"),
         ("interfaces",  "Yes", "Interface config — access, trunk, and unused ports"),
+        ("acls",        "Yes", "IP access control lists — VTY and SNMP access restriction"),
     ]
     for i, row_data in enumerate(features):
         ws.append(row_data)
@@ -363,6 +403,7 @@ def main() -> None:
     create_global_settings_sheet(wb)
     create_vlans_sheet(wb)
     create_interfaces_sheet(wb)
+    create_acls_sheet(wb)
     create_feature_selection_sheet(wb)
 
     # Named ranges must exist before cross-sheet dropdowns are usable
@@ -371,7 +412,15 @@ def main() -> None:
     # Insert Instructions as the first tab (shifts all others right)
     create_instructions_sheet(wb)
 
-    wb.save(str(output_path))
+    try:
+        wb.save(str(output_path))
+    except PermissionError as exc:
+        print(
+            f"Could not write workbook template to {output_path} because the file is open. "
+            "Close the workbook in Excel and run the generator again."
+        )
+        raise SystemExit(1) from exc
+
     print(f"Workbook template generated: {output_path}")
 
 

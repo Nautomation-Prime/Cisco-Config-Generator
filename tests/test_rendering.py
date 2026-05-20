@@ -10,7 +10,7 @@ from jinja2 import Environment, DictLoader
 from cisco_config_generator.rendering.engine import create_jinja_env, render_template
 from cisco_config_generator.rendering.registry import TemplateRegistry
 from cisco_config_generator.rendering.writers import write_config
-from cisco_config_generator.workbook.models import Device, VLAN, Interface, GlobalSettings
+from cisco_config_generator.workbook.models import ACLEntry, Device, VLAN, Interface, GlobalSettings
 
 
 class TestEngine:
@@ -37,6 +37,19 @@ class TestEngine:
         result = render_template(env, "vlans.j2", {"vlans": vlans})
         assert "vlan 10" in result
         assert "vlan 20" in result
+
+    def test_render_acl_template(self):
+        templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
+        env = create_jinja_env(templates_dir)
+        acls = [
+            ACLEntry("ACL_VTY_ACCESS", "Management network", "permit", "10.0.0.0", "0.0.0.255"),
+            ACLEntry("ACL_VTY_ACCESS", "Deny all others", "deny", "any", ""),
+        ]
+        result = render_template(env, "acls.j2", {"acls": acls})
+        assert "ip access-list standard ACL_VTY_ACCESS" in result
+        assert "remark Management network" in result
+        assert "permit 10.0.0.0 0.0.0.255" in result
+        assert "deny any" in result
 
 
 class TestRegistry:

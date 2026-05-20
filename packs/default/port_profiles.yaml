@@ -1,30 +1,74 @@
 profiles:
   access-user:
-    description: "Standard user access port"
+    description: "Standard user access port (PC only)"
     requires_vlan: true
+    qos_trust_dscp: false
     template_hint: interfaces_access
+
+  access-voip:
+    description: "Client/phone port (data + voice VLAN, QoS DSCP trust)"
+    requires_vlan: true
+    requires_voice_vlan: true
+    qos_trust_dscp: true
+    template_hint: interfaces_access
+
+  access-printer:
+    description: "Printer access port"
+    requires_vlan: true
+    qos_trust_dscp: false
+    template_hint: interfaces_access
+
+  access-video:
+    description: "Video device access port (QoS DSCP trust)"
+    requires_vlan: true
+    qos_trust_dscp: true
+    template_hint: interfaces_access
+
+  access-special:
+    description: "Special purpose access port"
+    requires_vlan: true
+    qos_trust_dscp: false
+    template_hint: interfaces_access
+
+  access-control:
+    description: "Access control / door entry device port"
+    requires_vlan: true
+    qos_trust_dscp: false
+    template_hint: interfaces_access
+
+  access-server:
+    description: "Server access port"
+    requires_vlan: true
+    qos_trust_dscp: false
+    template_hint: interfaces_access_server
 
   access-ap:
     description: "Wireless access point port (access mode)"
     requires_vlan: true
+    qos_trust_dscp: false
     template_hint: interfaces_access
 
   access-ap-trunk:
-    description: "Wireless access point port (trunk mode — native VLAN is the AP VLAN)"
+    description: "Wireless access point port (trunk mode — native VLAN is the AP/wireless VLAN)"
     requires_vlan: false
     requires_native_vlan: true
     template_hint: interfaces_ap_trunk
 
-  access-voip:
-    description: "VoIP phone port (data + voice VLAN)"
-    requires_vlan: true
-    requires_voice_vlan: true
-    template_hint: interfaces_access
-
   trunk-uplink:
-    description: "Trunk uplink to distribution or core"
+    description: "Trunk uplink to distribution or core (no port-channel)"
     requires_vlan: false
     template_hint: interfaces_trunk
+
+  trunk-uplink-portchannel:
+    description: "Trunk uplink with port-channel membership"
+    requires_vlan: false
+    requires_port_channel: true
+    template_hint: interfaces_trunk_portchannel
+
+  trunk-server:
+    description: "Server trunk port"
+    requires_vlan: false
+    template_hint: interfaces_trunk_server
 
   unused:
     description: "Unused / disabled port"

@@ -1,20 +1,14 @@
 ! ============================================================
-! Access Port Configuration
+! Server Access Port Configuration
 ! ============================================================
 !
 {% for iface in interfaces %}
 interface {{ iface.interface_name }}
- description {{ iface.description if iface.description else '** Access Port **' }}
+ description {{ iface.description if iface.description else '** Server Access **' }}
  switchport mode access
  switchport access vlan {{ iface.access_vlan }}
-{% if iface.voice_vlan %}
- switchport voice vlan {{ iface.voice_vlan }}
-{% endif %}
  switchport nonegotiate
  load-interval 30
-{% if iface.qos_trust_dscp %}
- auto qos trust dscp
-{% endif %}
  storm-control broadcast level 1.00 0.70
  storm-control multicast level 1.00 0.70
  spanning-tree portfast

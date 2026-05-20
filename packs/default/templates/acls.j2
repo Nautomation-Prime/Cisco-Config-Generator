@@ -1,0 +1,15 @@
+{% if acls %}
+! --- Access Control Lists ---
+{% for acl_name, entries in acls | groupby('acl_name') %}
+ip access-list standard {{ acl_name }}
+{% for entry in entries %}
+{% if entry.remark %}
+ remark {{ entry.remark }}
+{% endif %}
+{% if entry.action and entry.network %}
+ {{ entry.action }} {{ entry.network }}{{ (" " + entry.wildcard) if entry.wildcard else "" }}
+{% endif %}
+{% endfor %}
+!
+{% endfor %}
+{% endif %}

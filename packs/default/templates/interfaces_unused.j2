@@ -3,8 +3,9 @@
 ! ============================================================
 !
 {% for iface in interfaces %}
+default interface {{ iface.interface_name }}
 interface {{ iface.interface_name }}
- description ** Unused **
+ description * unused *
  switchport mode access
  switchport access vlan {{ settings.defaults.unused_vlan | default(999, true) }}
  shutdown

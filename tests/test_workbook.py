@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from cisco_config_generator.workbook.models import (
-    Device, VLAN, Interface, GlobalSettings, FeatureSelection, Intent
+    ACLEntry, Device, VLAN, Interface, GlobalSettings, FeatureSelection, Intent
 )
 
 
@@ -34,6 +34,14 @@ def make_intent(**kwargs) -> Intent:
                 port_profile="access-user",
                 access_vlan=20,
                 template_hint="interfaces_access",
+            )
+        ],
+        acls=[
+            ACLEntry(
+                acl_name="ACL_VTY_ACCESS",
+                action="permit",
+                network="10.0.0.0",
+                wildcard="0.0.0.255",
             )
         ],
         global_settings=GlobalSettings(),
@@ -77,3 +85,4 @@ class TestIntentModel:
         assert fs.base_config is True
         assert fs.vlans is True
         assert fs.interfaces is True
+        assert fs.acls is True

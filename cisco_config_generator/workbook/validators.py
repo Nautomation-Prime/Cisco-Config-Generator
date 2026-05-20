@@ -81,6 +81,11 @@ def validate_intent(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}' "
                 f"uses profile '{iface.port_profile}' which requires a voice VLAN, but none is set."
             )
+        if iface.voice_vlan is not None and iface.voice_vlan not in vlan_ids:
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}': "
+                f"voice VLAN {iface.voice_vlan} is not defined in the VLANs sheet."
+            )
         if profile_data.get("requires_native_vlan") and iface.native_vlan is None:
             errors.append(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}' "
@@ -91,5 +96,56 @@ def validate_intent(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}': "
                 f"native VLAN {iface.native_vlan} is not defined in the VLANs sheet."
             )
+        if profile_data.get("requires_port_channel") and iface.port_channel_number is None:
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}' "
+                f"uses profile '{iface.port_profile}' which requires a Port Channel No., but none is set."
+            )
+
+    # --- ACLs ---
+    if intent.feature_selection.acls:
+        valid_actions = {"permit", "deny"}
+        defined_acl_names = {acl.acl_name for acl in intent.acls if acl.acl_name}
+
+        for acl in intent.acls:
+            has_action = bool(acl.action)
+            has_network = bool(acl.network)
+
+            if acl.action and acl.action not in valid_actions:
+                errors.append(
+                    f"ACL '{acl.acl_name}' has invalid action '{acl.action}'. Valid actions: permit, deny."
+                )
+            if has_action != has_network:
+                errors.append(
+                    f"ACL '{acl.acl_name}' entry must include both Action and Network/Host together."
+                )
+            if not acl.remark and not (has_action and has_network):
+                errors.append(
+                    f"ACL '{acl.acl_name}' contains an empty entry. Populate Remark or Action + Network/Host."
+                )
+
+        if intent.feature_selection.base_config:
+            global_settings = intent.global_settings
+
+            if global_settings.vty_acl and global_settings.vty_acl not in defined_acl_names:
+                errors.append(
+                    f"Global Settings references VTY ACL '{global_settings.vty_acl}' but it is not defined in the ACLs sheet."
+                )
+            if (
+                global_settings.snmp_ro_user
+                and global_settings.snmp_ro_acl
+                and global_settings.snmp_ro_acl not in defined_acl_names
+            ):
+                errors.append(
+                    f"Global Settings references SNMP RO ACL '{global_settings.snmp_ro_acl}' but it is not defined in the ACLs sheet."
+                )
+            if (
+                global_settings.snmp_rw_user
+                and global_settings.snmp_rw_acl
+                and global_settings.snmp_rw_acl not in defined_acl_names
+            ):
+                errors.append(
+                    f"Global Settings references SNMP RW ACL '{global_settings.snmp_rw_acl}' but it is not defined in the ACLs sheet."
+                )
 
     return errors

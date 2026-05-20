@@ -1,4 +1,8 @@
 features:
+  - name: acls
+    description: "IP access control lists (VTY and SNMP access restriction)"
+    enabled_by_default: true
+
   - name: base_config
     description: "Base switch configuration (hostname, AAA, NTP, SNMP, STP, hardening)"
     enabled_by_default: true

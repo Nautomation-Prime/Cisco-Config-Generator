@@ -1,4 +1,8 @@
 template_map:
+  acls:
+    template: acls.j2
+    order: 5
+
   base_config:
     template: base.j2
     order: 10
@@ -15,8 +19,20 @@ template_map:
     template: interfaces_trunk.j2
     order: 30
 
+  interfaces_trunk_portchannel:
+    template: interfaces_trunk_portchannel.j2
+    order: 30
+
   interfaces_ap_trunk:
     template: interfaces_ap_trunk.j2
+    order: 30
+
+  interfaces_access_server:
+    template: interfaces_access_server.j2
+    order: 30
+
+  interfaces_trunk_server:
+    template: interfaces_trunk_server.j2
     order: 30
 
   interfaces_unused:

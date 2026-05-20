@@ -1,23 +1,23 @@
 ! ============================================================
-! Access Point Trunk Port Configuration
+! Trunk Uplink with Port-Channel Configuration
 ! ============================================================
 !
 {% for iface in interfaces %}
 interface {{ iface.interface_name }}
- description {{ iface.description if iface.description else '** WAP Trunk **' }}
+ description {{ iface.description if iface.description else '** Uplink (Port-Channel) **' }}
  switchport mode trunk
  switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else settings.defaults.native_vlan | default(1, true) }}
  switchport trunk allowed vlan all
  switchport nonegotiate
  load-interval 30
-{% if 'C2960' in device.model %}
- mls qos trust dscp
+{% if iface.interface_name.startswith('TenGigabit') %}
+ storm-control broadcast level 0.10 0.07
+ storm-control multicast level 0.10 0.07
 {% else %}
- auto qos trust dscp
-{% endif %}
  storm-control broadcast level 1.00 0.70
  storm-control multicast level 1.00 0.70
- spanning-tree portfast trunk
- no shutdown
+{% endif %}
+ ip dhcp snooping trust
+ channel-group {{ iface.port_channel_number }} mode active
 !
 {% endfor %}

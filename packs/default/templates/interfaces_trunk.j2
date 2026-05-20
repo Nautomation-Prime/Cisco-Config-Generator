@@ -1,5 +1,5 @@
 ! ============================================================
-! Trunk Port Configuration
+! Trunk Uplink Configuration
 ! ============================================================
 !
 {% for iface in interfaces %}
@@ -8,6 +8,16 @@ interface {{ iface.interface_name }}
  switchport mode trunk
  switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else settings.defaults.native_vlan | default(1, true) }}
  switchport trunk allowed vlan all
+ switchport nonegotiate
+ load-interval 30
+{% if iface.interface_name.startswith('TenGigabit') %}
+ storm-control broadcast level 0.10 0.07
+ storm-control multicast level 0.10 0.07
+{% else %}
+ storm-control broadcast level 1.00 0.70
+ storm-control multicast level 1.00 0.70
+{% endif %}
+ ip dhcp snooping trust
  no shutdown
 !
 {% endfor %}
