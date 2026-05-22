@@ -1,5 +1,0 @@
-1. Give user the option to define allowed VLANs on trunk ports
-2. Trunk port config with port channel option doesn't generate the port channel
-snmp_host field in the workbook doesn't appear to do anything. Need to validate or remove
-Access lists appear at the top of the generated config instead of the base configuration. Base config needs to be at the top
-Timezone setting needs looking at. User needs the option to choose the hours/minutes offset

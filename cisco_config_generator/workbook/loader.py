@@ -40,6 +40,10 @@ def _load_devices(ws: Worksheet) -> list[Device]:
         hostname = _cell_value(ws, row, headers.get("hostname", 1))
         if not hostname:
             continue
+        timezone_hours_col = headers.get("timezone_hours")
+        timezone_minutes_col = headers.get("timezone_minutes")
+        timezone_hours_raw = _cell_value(ws, row, timezone_hours_col) if timezone_hours_col else ""
+        timezone_minutes_raw = _cell_value(ws, row, timezone_minutes_col) if timezone_minutes_col else ""
         devices.append(Device(
             hostname=str(hostname).strip(),
             mgmt_ip=str(_cell_value(ws, row, headers.get("mgmt_ip", 2))).strip(),
@@ -49,6 +53,8 @@ def _load_devices(ws: Worksheet) -> list[Device]:
             uplink_module=str(_cell_value(ws, row, headers.get("uplink_module", 6))).strip(),
             site=str(_cell_value(ws, row, headers.get("site", 7))).strip(),
             timezone=str(_cell_value(ws, row, headers.get("timezone", 8)) or "GMT").strip(),
+            timezone_hours_offset=int(timezone_hours_raw) if str(timezone_hours_raw).strip() else 0,
+            timezone_minutes_offset=int(timezone_minutes_raw) if str(timezone_minutes_raw).strip() else 0,
             mgmt_subnet=str(_cell_value(ws, row, headers.get("mgmt_subnet", 9)) or "255.255.255.0").strip(),
         ))
     return devices
@@ -86,7 +92,14 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
         access_vlan_raw = _cell_value(ws, row, headers.get("access_vlan", 5))
         voice_vlan_raw = _cell_value(ws, row, headers.get("voice_vlan", 6))
         native_vlan_raw = _cell_value(ws, row, headers.get("native_vlan", 7))
-        port_channel_raw = _cell_value(ws, row, headers.get("port_channel_no.", 8))
+        allowed_vlans_col = headers.get("allowed_vlans")
+        storm_control_broadcast_col = headers.get("storm_control_broadcast")
+        storm_control_multicast_col = headers.get("storm_control_multicast")
+        port_channel_col = headers.get("port_channel_no.")
+        allowed_vlans_raw = _cell_value(ws, row, allowed_vlans_col) if allowed_vlans_col else ""
+        storm_control_broadcast_raw = _cell_value(ws, row, storm_control_broadcast_col) if storm_control_broadcast_col else ""
+        storm_control_multicast_raw = _cell_value(ws, row, storm_control_multicast_col) if storm_control_multicast_col else ""
+        port_channel_raw = _cell_value(ws, row, port_channel_col) if port_channel_col else ""
         interfaces.append(Interface(
             device_name=str(device_name).strip(),
             interface_name=str(_cell_value(ws, row, headers.get("interface_name", 2))).strip(),
@@ -95,6 +108,9 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
             access_vlan=int(access_vlan_raw) if access_vlan_raw else None,
             voice_vlan=int(voice_vlan_raw) if voice_vlan_raw else None,
             native_vlan=int(native_vlan_raw) if native_vlan_raw else None,
+            allowed_vlans=str(allowed_vlans_raw).strip(),
+            storm_control_broadcast=str(storm_control_broadcast_raw).strip(),
+            storm_control_multicast=str(storm_control_multicast_raw).strip(),
             port_channel_number=int(port_channel_raw) if port_channel_raw else None,
             qos_trust_dscp=qos_trust_dscp,
             template_hint=template_hint,

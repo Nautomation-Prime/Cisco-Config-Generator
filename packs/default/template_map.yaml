@@ -1,11 +1,11 @@
 template_map:
   acls:
     template: acls.j2
-    order: 5
+    order: 15
 
   base_config:
     template: base.j2
-    order: 10
+    order: 5
 
   vlans:
     template: vlans.j2

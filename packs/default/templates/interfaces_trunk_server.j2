@@ -7,11 +7,11 @@ interface {{ iface.interface_name }}
  description {{ iface.description if iface.description else '** Server Trunk **' }}
  switchport mode trunk
  switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else settings.defaults.native_vlan | default(1, true) }}
- switchport trunk allowed vlan all
+ switchport trunk allowed vlan {{ iface.allowed_vlans if iface.allowed_vlans else 'all' }}
  switchport nonegotiate
  load-interval 30
- storm-control broadcast level 1.00 0.70
- storm-control multicast level 1.00 0.70
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else '1.00 0.70' }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else '1.00 0.70' }}
  spanning-tree portfast
  spanning-tree guard root
  spanning-tree bpduguard enable

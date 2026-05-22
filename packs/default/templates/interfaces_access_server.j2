@@ -9,8 +9,8 @@ interface {{ iface.interface_name }}
  switchport access vlan {{ iface.access_vlan }}
  switchport nonegotiate
  load-interval 30
- storm-control broadcast level 1.00 0.70
- storm-control multicast level 1.00 0.70
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else '1.00 0.70' }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else '1.00 0.70' }}
  spanning-tree portfast
  spanning-tree guard root
  spanning-tree bpduguard enable

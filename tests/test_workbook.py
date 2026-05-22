@@ -56,6 +56,8 @@ class TestDeviceModel:
     def test_device_defaults(self):
         d = make_device()
         assert d.timezone == "GMT"
+        assert d.timezone_hours_offset == 0
+        assert d.timezone_minutes_offset == 0
         assert d.mgmt_subnet == "255.255.255.0"
 
     def test_device_required_fields(self):

@@ -87,7 +87,7 @@ aaa authentication login default local
 aaa authorization exec default local if-authenticated
 {% endif %}
 !
-clock timezone {{ device.timezone | default('GMT', true) }} 0 0
+clock timezone {{ device.timezone | default('GMT', true) }} {{ device.timezone_hours_offset | default(0, true) }} {{ device.timezone_minutes_offset | default(0, true) }}
 {% if global.summer_time_config %}
 clock summer-time {{ global.summer_time_config }}
 {% endif %}

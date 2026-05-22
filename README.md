@@ -105,10 +105,10 @@ The generator validates that every ACL name referenced in Global Settings is def
 
 | Sheet | Purpose |
 |-------|---------|
-| **Devices** | One row per switch — hostname, IP, model, uplink module |
-| **Global Settings** | Shared settings — NTP, DNS, SNMP, banner, AAA, ACL names |
+| **Devices** | One row per switch — hostname, IP, model, uplink module, timezone label, timezone hour/minute offsets |
+| **Global Settings** | Shared settings — NTP, DNS, SNMP, banner, AAA, ACL names. `snmp_host` is only rendered when at least one SNMPv3 user is defined |
 | **VLANs** | VLAN ID, name, description |
-| **Interfaces** | Per-device per-port intent — profile selection + description |
+| **Interfaces** | Per-device per-port intent — profile selection, description, VLANs, optional trunk allowed VLAN list, optional storm-control broadcast/multicast overrides, and port-channel number where required |
 | **ACLs** | Standard ACL entries — name, remark, action, network/host, wildcard |
 | **Feature Selection** | Toggle which config sections to generate (Yes/No) |
 
@@ -151,9 +151,9 @@ All Jinja2 templates receive:
 
 ```python
 {
-    "device":     Device,           # hostname, mgmt_ip, model, timezone...
+  "device":     Device,           # hostname, mgmt_ip, model, timezone, offsets...
     "vlans":      [VLAN],           # full VLAN list
-    "interfaces": [Interface],      # interfaces for this device (filtered per template group)
+  "interfaces": [Interface],      # interfaces for this device (filtered per template group, including allowed_vlans, storm control, and port-channel data)
     "global":     GlobalSettings,   # NTP, SNMP, AAA, banner, ACL names...
     "hardware":   HardwareProfile,  # port counts and interface naming
     "acls":       [ACLEntry],       # all ACL entries (for acls.j2)

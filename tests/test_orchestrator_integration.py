@@ -23,6 +23,8 @@ def _create_test_workbook(path: Path) -> None:
             "Uplink Module",
             "Site",
             "Timezone",
+            "Timezone Hours",
+            "Timezone Minutes",
             "Mgmt Subnet",
         ]
     )
@@ -35,7 +37,9 @@ def _create_test_workbook(path: Path) -> None:
             "C9200-48P",
             "NM-4X",
             "HQ",
-            "GMT",
+            "CET",
+            1,
+            0,
             "255.255.255.0",
         ]
     )
@@ -50,6 +54,7 @@ def _create_test_workbook(path: Path) -> None:
         ("snmp_ro_user", "ro-user"),
         ("snmp_ro_auth_password", "authpass"),
         ("snmp_ro_priv_password", "privpass"),
+        ("snmp_host", "10.0.1.20"),
         ("vty_acl", "ACL_VTY_ACCESS"),
         ("snmp_ro_acl", "ACL_SNMP_RO_ACCESS"),
         ("banner_motd", "TEST BANNER"),
@@ -71,6 +76,9 @@ def _create_test_workbook(path: Path) -> None:
             "Access VLAN",
             "Voice VLAN",
             "Native VLAN",
+            "Allowed VLANs",
+            "Storm Control Broadcast",
+            "Storm Control Multicast",
             "Port Channel No.",
         ]
     )
@@ -84,6 +92,39 @@ def _create_test_workbook(path: Path) -> None:
             "",
             "",
             "",
+            "",
+            "",
+            "",
+        ]
+    )
+    interfaces_ws.append(
+        [
+            "SW-TEST-01",
+            "TenGigabitEthernet1/1/1",
+            "trunk-uplink-portchannel",
+            "Uplink to Core",
+            "",
+            "",
+            10,
+            "10,20",
+            "1.00 0.70",
+            "1.00 0.70",
+            1,
+        ]
+    )
+    interfaces_ws.append(
+        [
+            "SW-TEST-01",
+            "TenGigabitEthernet1/1/2",
+            "trunk-uplink-portchannel",
+            "Uplink to Core",
+            "",
+            "",
+            10,
+            "10,20",
+            "1.00 0.70",
+            "1.00 0.70",
+            1,
         ]
     )
 
@@ -133,10 +174,19 @@ class TestOrchestratorIntegration:
             assert "ip access-list standard ACL_VTY_ACCESS" in config
             assert "permit 10.0.0.0 0.0.0.255" in config
             assert "hostname SW-TEST-01" in config
+            assert "clock timezone CET 1 0" in config
             assert "snmp-server group ROGROUP v3 priv read VIEWALL access ACL_SNMP_RO_ACCESS" in config
+            assert "snmp-server host 10.0.1.20 version 3 priv ro-user" in config
             assert "access-class ACL_VTY_ACCESS in vrf-also" in config
             assert "vlan 20" in config
             assert "interface GigabitEthernet1/0/1" in config
             assert "switchport access vlan 20" in config
+            assert "interface Port-channel1" in config
+            assert config.count("interface Port-channel1") == 1
+            assert "switchport trunk allowed vlan 10,20" in config
+            assert config.count("storm-control broadcast level 1.00 0.70") == 4
+            assert config.count("storm-control multicast level 1.00 0.70") == 4
+            assert "storm-control broadcast level 0.10 0.07" not in config
+            assert "storm-control multicast level 0.10 0.07" not in config
             assert "banner motd ^" in config
-            assert config.index("ip access-list standard ACL_VTY_ACCESS") < config.index("hostname SW-TEST-01")
+            assert config.index("hostname SW-TEST-01") < config.index("ip access-list standard ACL_VTY_ACCESS")

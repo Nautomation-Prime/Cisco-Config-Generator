@@ -1,6 +1,15 @@
 from __future__ import annotations
 
+import re
+
 from cisco_config_generator.workbook.models import Intent, Device, VLAN, Interface
+
+
+_STORM_CONTROL_LEVEL_RE = re.compile(r"^\d+(?:\.\d+)?\s+\d+(?:\.\d+)?$")
+
+
+def _is_valid_storm_control_level(value: str) -> bool:
+    return bool(_STORM_CONTROL_LEVEL_RE.fullmatch(value.strip()))
 
 
 class ValidationError(Exception):
@@ -43,6 +52,16 @@ def validate_intent(
             errors.append(
                 f"Device '{device.hostname}': uplink module '{device.uplink_module}' not found "
                 f"in hardware catalog. Valid modules: {list(uplink_modules.keys())}"
+            )
+        if not -23 <= device.timezone_hours_offset <= 23:
+            errors.append(
+                f"Device '{device.hostname}': timezone hours offset {device.timezone_hours_offset} is out of range. "
+                "Valid range: -23 to 23."
+            )
+        if not 0 <= device.timezone_minutes_offset <= 59:
+            errors.append(
+                f"Device '{device.hostname}': timezone minutes offset {device.timezone_minutes_offset} is out of range. "
+                "Valid range: 0 to 59."
             )
 
     # --- VLANs ---
@@ -96,10 +115,27 @@ def validate_intent(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}': "
                 f"native VLAN {iface.native_vlan} is not defined in the VLANs sheet."
             )
+        if iface.storm_control_broadcast and not _is_valid_storm_control_level(iface.storm_control_broadcast):
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}': "
+                "Storm Control Broadcast must contain two numeric values, for example '1.00 0.70'."
+            )
+        if iface.storm_control_multicast and not _is_valid_storm_control_level(iface.storm_control_multicast):
+            errors.append(
+                f"Interface '{iface.interface_name}' on '{iface.device_name}': "
+                "Storm Control Multicast must contain two numeric values, for example '1.00 0.70'."
+            )
         if profile_data.get("requires_port_channel") and iface.port_channel_number is None:
             errors.append(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}' "
                 f"uses profile '{iface.port_profile}' which requires a Port Channel No., but none is set."
+            )
+
+    if intent.feature_selection.base_config:
+        global_settings = intent.global_settings
+        if global_settings.snmp_host and not (global_settings.snmp_ro_user or global_settings.snmp_rw_user):
+            errors.append(
+                "Global Settings sets snmp_host but no SNMPv3 user is defined. Configure snmp_ro_user or snmp_rw_user, or clear snmp_host."
             )
 
     # --- ACLs ---
@@ -125,8 +161,6 @@ def validate_intent(
                 )
 
         if intent.feature_selection.base_config:
-            global_settings = intent.global_settings
-
             if global_settings.vty_acl and global_settings.vty_acl not in defined_acl_names:
                 errors.append(
                     f"Global Settings references VTY ACL '{global_settings.vty_acl}' but it is not defined in the ACLs sheet."

@@ -112,3 +112,47 @@ class TestValidation:
         intent = make_intent(interfaces=[iface])
         errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
         assert any("voice VLAN 888" in e for e in errors)
+
+    def test_snmp_host_requires_snmp_user(self):
+        global_settings = GlobalSettings(snmp_host="10.0.1.20")
+        intent = make_intent(global_settings=global_settings)
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("snmp_host" in e for e in errors)
+
+    def test_timezone_hours_offset_out_of_range(self):
+        device = make_device(timezone_hours_offset=24)
+        intent = make_intent(devices=[device])
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("timezone hours offset" in e for e in errors)
+
+    def test_timezone_minutes_offset_out_of_range(self):
+        device = make_device(timezone_minutes_offset=60)
+        intent = make_intent(devices=[device])
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("timezone minutes offset" in e for e in errors)
+
+    def test_invalid_storm_control_broadcast_format(self):
+        iface = Interface(
+            device_name="SW-TEST-01",
+            interface_name="TenGigabitEthernet1/1/1",
+            port_profile="trunk-uplink",
+            native_vlan=10,
+            storm_control_broadcast="high",
+            template_hint="interfaces_trunk",
+        )
+        intent = make_intent(interfaces=[iface])
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("Storm Control Broadcast" in e for e in errors)
+
+    def test_invalid_storm_control_multicast_format(self):
+        iface = Interface(
+            device_name="SW-TEST-01",
+            interface_name="TenGigabitEthernet1/1/1",
+            port_profile="trunk-uplink",
+            native_vlan=10,
+            storm_control_multicast="high",
+            template_hint="interfaces_trunk",
+        )
+        intent = make_intent(interfaces=[iface])
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("Storm Control Multicast" in e for e in errors)

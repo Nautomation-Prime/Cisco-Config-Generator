@@ -129,10 +129,10 @@ def create_instructions_sheet(wb: Workbook) -> None:
     # Sheet guide table
     guide = [
         ("Sheet", "What to fill in"),
-        ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Each device needs a unique Hostname, Management IP, VLAN, and Default Gateway."),
+        ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Each device needs a unique Hostname, Management IP, VLAN, Default Gateway, timezone label, and timezone hour/minute offsets."),
         ("Global Settings", "Settings shared across all devices — NTP/DNS servers, TACACS+ servers and key, SNMPv3 RO/RW credentials, SNMP host/location/contact, ACL names for VTY and SNMP access (bodies defined in the ACLs sheet), syslog server, banner, enable secret, and local admin credentials."),
         ("VLANs", "Define all VLANs for the site. VLAN IDs entered here automatically appear in the Access VLAN and Voice VLAN dropdowns on the Interfaces sheet."),
-        ("Interfaces", "One row per port per device. Pick a Port Profile (dropdown) and add a description. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN; access ports use Access/Voice VLAN."),
+        ("Interfaces", "One row per port per device. Pick a Port Profile (dropdown) and add a description. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN, optional Allowed VLANs, optional Storm Control Broadcast/Multicast overrides, and Port Channel No. where required; access ports use Access/Voice VLAN."),
         ("ACLs", "Define IP access control lists used for VTY and SNMP access restriction. One row per ACL entry: ACL Name, optional Remark, Action (permit/deny), Network/Host, and optional Wildcard mask. ACL names must match those set in Global Settings (vty_acl, snmp_ro_acl, snmp_rw_acl)."),
         ("Feature Selection", "Toggle which config sections to generate (Yes/No). Useful if you only need to regenerate interface configs, for example."),
     ]
@@ -192,16 +192,16 @@ def create_devices_sheet(wb: Workbook) -> None:
     ws.freeze_panes = "A2"
 
     headers = ["Hostname", "Mgmt IP", "Mgmt VLAN", "Default Gateway",
-               "Model", "Uplink Module", "Site", "Timezone", "Mgmt Subnet"]
-    widths = [22, 18, 14, 20, 22, 20, 20, 14, 18]
+               "Model", "Uplink Module", "Site", "Timezone", "Timezone Hours", "Timezone Minutes", "Mgmt Subnet"]
+    widths = [22, 18, 14, 20, 22, 20, 20, 14, 16, 18, 18]
     style_header(ws, headers, widths=widths)
 
     add_list_validation(ws, col=5, formula='"' + ",".join(MODELS) + '"')
     add_list_validation(ws, col=6, formula='"' + ",".join(UPLINK_MODULES) + '"')
 
     example_rows = [
-        ("SW-OFFICE-01", "10.0.10.2", 10, "10.0.10.1", MODELS[0], UPLINK_MODULES[0], "Head Office", "GMT", "255.255.255.0"),
-        ("SW-OFFICE-02", "10.0.10.3", 10, "10.0.10.1", MODELS[1], UPLINK_MODULES[0], "Head Office", "GMT", "255.255.255.0"),
+        ("SW-OFFICE-01", "10.0.10.2", 10, "10.0.10.1", MODELS[0], UPLINK_MODULES[0], "Head Office", "GMT", 0, 0, "255.255.255.0"),
+        ("SW-OFFICE-02", "10.0.10.3", 10, "10.0.10.1", MODELS[1], UPLINK_MODULES[0], "Head Office", "CET", 1, 0, "255.255.255.0"),
     ]
     for i, row_data in enumerate(example_rows):
         ws.append(row_data)
@@ -316,8 +316,8 @@ def create_interfaces_sheet(wb: Workbook) -> None:
     ws.freeze_panes = "A2"
 
     headers = ["Device Name", "Interface Name", "Port Profile",
-               "Description", "Access VLAN", "Voice VLAN", "Native VLAN", "Port Channel No."]
-    widths = [22, 32, 24, 40, 14, 14, 14, 16]
+               "Description", "Access VLAN", "Voice VLAN", "Native VLAN", "Allowed VLANs", "Storm Control Broadcast", "Storm Control Multicast", "Port Channel No."]
+    widths = [22, 32, 24, 40, 14, 14, 14, 22, 24, 24, 16]
     style_header(ws, headers, widths=widths)
 
     # Device Name — cross-sheet dropdown from Devices!$A (named range)
@@ -330,12 +330,12 @@ def create_interfaces_sheet(wb: Workbook) -> None:
     add_list_validation(ws, col=7, formula="VLANIDs")
 
     example_rows = [
-        ("SW-OFFICE-01", "GigabitEthernet1/0/1",    "access-voip",              "CLIENT: PC/Phone - Desk 1",   20, 30,  "",  ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/2",    "access-printer",           "PRINTER: Floor 1",            20, "",  "",  ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap-trunk",          "WAP - Lobby",                 "", "",  40,  ""),
-        ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  1),
-        ("SW-OFFICE-01", "TenGigabitEthernet1/1/2", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  1),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/48",   "unused",                   "",                            "", "",  "",  ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/1",    "access-voip",              "CLIENT: PC/Phone - Desk 1",   20, 30,  "",  "",            "",          "",          ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/2",    "access-printer",           "PRINTER: Floor 1",            20, "",  "",  "",            "",          "",          ""),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap-trunk",          "WAP - Lobby",                 "", "",  40,  "10,20,40",    "1.00 0.70", "1.00 0.70", ""),
+        ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
+        ("SW-OFFICE-01", "TenGigabitEthernet1/1/2", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
+        ("SW-OFFICE-01", "GigabitEthernet1/0/48",   "unused",                   "",                            "", "",  "",  "",            "",          "",          ""),
     ]
     for i, row_data in enumerate(example_rows):
         ws.append(row_data)

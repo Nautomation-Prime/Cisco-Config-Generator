@@ -30,6 +30,8 @@ class Device:
     uplink_module: str
     site: str = ""
     timezone: str = "GMT"
+    timezone_hours_offset: int = 0
+    timezone_minutes_offset: int = 0
     mgmt_subnet: str = "255.255.255.0"
 
 
@@ -42,6 +44,9 @@ class Interface:
     access_vlan: int | None = None
     voice_vlan: int | None = None
     native_vlan: int | None = None
+    allowed_vlans: str = ""
+    storm_control_broadcast: str = ""
+    storm_control_multicast: str = ""
     port_channel_number: int | None = None
     qos_trust_dscp: bool = False
     template_hint: str = ""

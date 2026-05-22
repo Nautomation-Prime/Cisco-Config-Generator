@@ -51,6 +51,123 @@ class TestEngine:
         assert "permit 10.0.0.0 0.0.0.255" in result
         assert "deny any" in result
 
+    def test_render_tengig_portchannel_template(self):
+        templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
+        env = create_jinja_env(templates_dir)
+        interfaces = [
+            Interface(
+                device_name="SW-01",
+                interface_name="TenGigabitEthernet1/1/1",
+                port_profile="trunk-uplink-portchannel",
+                description="Uplink to Core",
+                native_vlan=99,
+                allowed_vlans="10,20,99",
+                port_channel_number=1,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+            Interface(
+                device_name="SW-01",
+                interface_name="TenGigabitEthernet1/1/2",
+                port_profile="trunk-uplink-portchannel",
+                description="Uplink to Core",
+                native_vlan=99,
+                allowed_vlans="10,20,99",
+                port_channel_number=1,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+        ]
+
+        result = render_template(
+            env,
+            "interfaces_trunk_portchannel.j2",
+            {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
+        )
+
+        assert "interface Port-channel1" in result
+        assert "switchport trunk allowed vlan 10,20,99" in result
+        assert "switchport trunk native vlan 99" in result
+        assert result.count("storm-control broadcast level 0.10 0.07") == 3
+        assert result.count("storm-control multicast level 0.10 0.07") == 3
+        assert "interface Port-channel1\n description Uplink to Core\n switchport mode trunk\n switchport trunk allowed vlan 10,20,99\n switchport trunk native vlan 99\n switchport nonegotiate\n load-interval 30\n storm-control broadcast level 0.10 0.07\n storm-control multicast level 0.10 0.07\n ip dhcp snooping trust\n!" in result
+
+    def test_render_gig_portchannel_template(self):
+        templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
+        env = create_jinja_env(templates_dir)
+        interfaces = [
+            Interface(
+                device_name="SW-01",
+                interface_name="GigabitEthernet1/0/47",
+                port_profile="trunk-uplink-portchannel",
+                description="Server Uplink",
+                native_vlan=99,
+                allowed_vlans="all",
+                port_channel_number=7,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+            Interface(
+                device_name="SW-01",
+                interface_name="GigabitEthernet1/0/48",
+                port_profile="trunk-uplink-portchannel",
+                description="Server Uplink",
+                native_vlan=99,
+                allowed_vlans="all",
+                port_channel_number=7,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+        ]
+
+        result = render_template(
+            env,
+            "interfaces_trunk_portchannel.j2",
+            {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
+        )
+
+        assert "interface Port-channel7" in result
+        assert result.count("storm-control broadcast level 1.00 0.70") == 3
+        assert result.count("storm-control multicast level 1.00 0.70") == 3
+        assert "no shutdown\n!\ninterface Port-channel7" in result
+
+    def test_render_custom_storm_control_override(self):
+        templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
+        env = create_jinja_env(templates_dir)
+        interfaces = [
+            Interface(
+                device_name="SW-01",
+                interface_name="TenGigabitEthernet1/1/1",
+                port_profile="trunk-uplink-portchannel",
+                description="Uplink to Core",
+                native_vlan=99,
+                allowed_vlans="10,20,99",
+                storm_control_broadcast="1.00 0.70",
+                storm_control_multicast="1.00 0.70",
+                port_channel_number=1,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+            Interface(
+                device_name="SW-01",
+                interface_name="TenGigabitEthernet1/1/2",
+                port_profile="trunk-uplink-portchannel",
+                description="Uplink to Core",
+                native_vlan=99,
+                allowed_vlans="10,20,99",
+                storm_control_broadcast="1.00 0.70",
+                storm_control_multicast="1.00 0.70",
+                port_channel_number=1,
+                template_hint="interfaces_trunk_portchannel",
+            ),
+        ]
+
+        result = render_template(
+            env,
+            "interfaces_trunk_portchannel.j2",
+            {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
+        )
+
+        assert result.count("storm-control broadcast level 1.00 0.70") == 3
+        assert result.count("storm-control multicast level 1.00 0.70") == 3
+        assert "storm-control broadcast level 0.10 0.07" not in result
+        assert "storm-control multicast level 0.10 0.07" not in result
+
 
 class TestRegistry:
     def test_resolve_known_hint(self):
