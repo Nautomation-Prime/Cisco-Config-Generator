@@ -12,7 +12,7 @@ per-device `.cfg` files using Jinja2 templates. It is designed as a customisable
 the core Python engine never needs to change between customers — all site-specific templates
 and settings live in a **pack** folder.
 
-```
+```text
 Excel intent → Python core → Jinja2 templates → per-device .cfg files
 ```
 
