@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 import click
-from cisco_config_generator.__about__ import __version__
+from cisco_config_generator.__about__ import __version__, __author__
 from cisco_config_generator.logging_setup import setup_logging
 
 
@@ -47,7 +47,9 @@ def main(
 ) -> None:
     """Cisco Config Generator — generate per-device IOS-XE access switch configuration files."""
     if version:
-        click.echo(f"Cisco Config Generator v{__version__}")
+        click.echo(f"Cisco Config Generator  v{__version__}")
+        click.echo(f"{__author__}")
+        click.echo(f"Python {sys.version.split()[0]}  |  {sys.platform}")
         sys.exit(0)
 
     if no_tui:

@@ -337,6 +337,7 @@ def create_interfaces_sheet(wb: Workbook) -> None:
         "HOW TO USE:  Each row configures one switch port.  "
         "Set Device Name (must match the Devices sheet), choose a Port Profile, enter a Description, "
         "and fill in the VLAN column(s) required by the chosen profile.  "
+        "The first four rows are filled with examples showing common port types — update or replace them as needed.  "
         "For a 24-port switch, delete rows GigabitEthernet1/0/25 to GigabitEthernet1/0/48.  "
         "Ports NOT listed in this sheet are automatically generated as 'unused' (shutdown) ports — "
         "only add rows for ports that need explicit configuration.  "
@@ -363,10 +364,21 @@ def create_interfaces_sheet(wb: Workbook) -> None:
 
     device = "SW-OFFICE-01"
 
-    # 48 access ports — GigabitEthernet1/0/1 through GigabitEthernet1/0/48
-    # Profile pre-set to access-voip (most common). Change per port as required.
-    # Fill in Access VLAN and Voice VLAN for each port before running the generator.
-    for i, port in enumerate(range(1, 49)):
+    # First four ports are complete examples covering common port types.
+    # VLANs reference the example rows from the VLANs sheet (DATA=20, VOICE=30, WIRELESS=40).
+    example_rows = [
+        (device, "GigabitEthernet1/0/1", "access-voip",    "CLIENT: PC/Phone - Desk 1",   20, 30, "",  "",              "",          "",          ""),
+        (device, "GigabitEthernet1/0/2", "access-printer",  "PRINTER: Floor 1 Copier",     20, "",  "",  "",              "",          "",          ""),
+        (device, "GigabitEthernet1/0/3", "access-ap-trunk", "WAP - Lobby",                 "", "",  40,  "10,20,30,40",   "1.00 0.70", "1.00 0.70", ""),
+        (device, "GigabitEthernet1/0/4", "access-user",     "CLIENT: Data only - Desk 4",  20, "",  "",  "",              "",          "",          ""),
+    ]
+    for i, row_data in enumerate(example_rows):
+        ws.append(row_data)
+        apply_row_style(ws, ws.max_row, len(headers), alt=(i % 2 == 1))
+
+    # Remaining access ports — GigabitEthernet1/0/5 through GigabitEthernet1/0/48
+    # Profile pre-set to access-voip (most common). Fill in VLANs and description per port.
+    for i, port in enumerate(range(5, 49)):
         row_data = (
             device,
             f"GigabitEthernet1/0/{port}",

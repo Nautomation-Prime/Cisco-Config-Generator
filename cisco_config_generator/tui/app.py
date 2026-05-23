@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import sys
 import threading
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,7 @@ from textual.widgets import (
 )
 from textual.reactive import reactive
 
+from cisco_config_generator.__about__ import __version__, __author__
 from cisco_config_generator.pack_loader import list_available_packs, resolve_pack_path
 from cisco_config_generator.settings_loader import load_pack_settings
 from cisco_config_generator.logging_setup import get_logger
@@ -54,11 +57,12 @@ class CiscoConfigGeneratorApp(App):
     """
 
     TITLE = "Cisco Config Generator"
-    SUB_TITLE = "Nautomation Prime"
+    SUB_TITLE = f"Nautomation Prime  |  v{__version__}"
 
     BINDINGS = [
         ("ctrl+c", "quit", "Quit"),
         ("ctrl+r", "run", "Run"),
+        ("ctrl+l", "clear_log", "Clear log"),
     ]
 
     running: reactive[bool] = reactive(False)
@@ -108,6 +112,13 @@ class CiscoConfigGeneratorApp(App):
                 yield Log(id="log-view", auto_scroll=True)
 
         yield Footer()
+
+    def on_mount(self) -> None:
+        self._append_log(f"[bold]Cisco Config Generator[/bold]  v{__version__}")
+        self._append_log(f"[dim]{__author__}  |  Python {sys.version.split()[0]}  |  {sys.platform}[/dim]")
+        self._append_log(f"[dim]Started: {datetime.now().strftime('%Y-%m-%d  %H:%M:%S')}[/dim]")
+        self._append_log("[dim]" + "─" * 52 + "[/dim]")
+        self._append_log("Ready.  Enter a workbook path and press [bold]Ctrl+R[/bold] to run.")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "run-btn":
@@ -172,6 +183,9 @@ class CiscoConfigGeneratorApp(App):
             self.call_from_thread(self._set_status, "[red]Error — see log.[/red]")
         finally:
             self.call_from_thread(setattr, self, "running", False)
+
+    def action_clear_log(self) -> None:
+        self._clear_log()
 
     def _append_log(self, message: str) -> None:
         log_view = self.query_one("#log-view", Log)
