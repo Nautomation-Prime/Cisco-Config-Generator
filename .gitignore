@@ -20,12 +20,14 @@ dist/
 build/
 
 # Project specific
-output/
+output/*
+!output/.gitkeep
 logs/*.log
 .python/
 .env
 *.xlsx
 !assets/workbook_template.xlsx
+!assets/sample_intent.xlsx
 
 # IDE
 .vscode/settings.json
