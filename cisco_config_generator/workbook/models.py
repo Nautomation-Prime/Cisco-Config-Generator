@@ -59,7 +59,7 @@ class GlobalSettings:
     dns_servers: list[str] = field(default_factory=list)
     summer_time_config: str = ""
     # AAA / TACACS+
-    aaa_group_name: str = "AAA_NOC"
+    aaa_group_name: str = "TACACS_SERVERS"
     tacacs_server_1: str = ""
     tacacs_server_2: str = ""
     tacacs_key: str = ""
@@ -68,12 +68,12 @@ class GlobalSettings:
     snmp_auth_protocol: str = "SHA"
     snmp_priv_protocol: str = "AES"
     # SNMPv3 — read-only user/group
-    snmp_ro_group: str = "ROGROUP"
+    snmp_ro_group: str = "SNMPv3_RO"
     snmp_ro_user: str = ""
     snmp_ro_auth_password: str = ""
     snmp_ro_priv_password: str = ""
     # SNMPv3 — read-write user/group
-    snmp_rw_group: str = "RWGROUP"
+    snmp_rw_group: str = "SNMPv3_RW"
     snmp_rw_user: str = ""
     snmp_rw_auth_password: str = ""
     snmp_rw_priv_password: str = ""

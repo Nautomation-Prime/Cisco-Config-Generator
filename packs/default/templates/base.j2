@@ -65,7 +65,7 @@ aaa authentication fail-message #
 #
 !
 {% if global.tacacs_server_1 %}
-aaa group server tacacs+ {{ global.aaa_group_name | default('AAA_NOC', true) }}
+aaa group server tacacs+ {{ global.aaa_group_name | default('TACACS_SERVERS', true) }}
  server-private {{ global.tacacs_server_1 }} key 7 {{ global.tacacs_key }}
 {% if global.tacacs_server_2 %}
  server-private {{ global.tacacs_server_2 }} key 7 {{ global.tacacs_key }}
@@ -74,13 +74,13 @@ ip tacacs source-interface Vlan{{ device.mgmt_vlan }}
 !
 aaa authentication password-prompt Local-Password:
 aaa authentication username-prompt Local-Login-Name:
-aaa authentication login default group {{ global.aaa_group_name | default('AAA_NOC', true) }} local
-aaa authentication enable default group {{ global.aaa_group_name | default('AAA_NOC', true) }} enable
-aaa authorization exec default group {{ global.aaa_group_name | default('AAA_NOC', true) }} local
+aaa authentication login default group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }} local
+aaa authentication enable default group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }} enable
+aaa authorization exec default group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }} local
 aaa authorization console
-aaa authorization commands 15 default group {{ global.aaa_group_name | default('AAA_NOC', true) }} local
-aaa accounting exec default start-stop group {{ global.aaa_group_name | default('AAA_NOC', true) }}
-aaa accounting commands 15 default start-stop group {{ global.aaa_group_name | default('AAA_NOC', true) }}
+aaa authorization commands 15 default group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }} local
+aaa accounting exec default start-stop group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }}
+aaa accounting commands 15 default start-stop group {{ global.aaa_group_name | default('TACACS_SERVERS', true) }}
 aaa session-id common
 {% else %}
 aaa authentication login default local
@@ -175,16 +175,16 @@ snmp-server trap link ietf
 snmp ifmib ifindex persist
 {% if global.snmp_ro_user %}
 {% if features.acls and global.snmp_ro_acl %}
-snmp-server group {{ global.snmp_ro_group | default('ROGROUP', true) }} v3 priv read VIEWALL access {{ global.snmp_ro_acl }}
+snmp-server group {{ global.snmp_ro_group | default('SNMPv3_RO', true) }} v3 priv read VIEWALL access {{ global.snmp_ro_acl }}
 {% else %}
-snmp-server group {{ global.snmp_ro_group | default('ROGROUP', true) }} v3 priv read VIEWALL
+snmp-server group {{ global.snmp_ro_group | default('SNMPv3_RO', true) }} v3 priv read VIEWALL
 {% endif %}
 {% endif %}
 {% if global.snmp_rw_user %}
 {% if features.acls and global.snmp_rw_acl %}
-snmp-server group {{ global.snmp_rw_group | default('RWGROUP', true) }} v3 priv read VIEWALL write VIEWALL access {{ global.snmp_rw_acl }}
+snmp-server group {{ global.snmp_rw_group | default('SNMPv3_RW', true) }} v3 priv read VIEWALL write VIEWALL access {{ global.snmp_rw_acl }}
 {% else %}
-snmp-server group {{ global.snmp_rw_group | default('RWGROUP', true) }} v3 priv read VIEWALL write VIEWALL
+snmp-server group {{ global.snmp_rw_group | default('SNMPv3_RW', true) }} v3 priv read VIEWALL write VIEWALL
 {% endif %}
 {% endif %}
 {% if global.snmp_location %}
@@ -195,10 +195,10 @@ snmp-server contact {{ global.snmp_contact }}
 {% endif %}
 snmp-server enable traps
 {% if global.snmp_ro_user %}
-snmp-server user {{ global.snmp_ro_user }} {{ global.snmp_ro_group | default('ROGROUP', true) }} v3 auth {{ global.snmp_auth_protocol | default('SHA', true) }} {{ global.snmp_ro_auth_password }} priv {{ global.snmp_priv_protocol | default('AES', true) }} 256 {{ global.snmp_ro_priv_password }}
+snmp-server user {{ global.snmp_ro_user }} {{ global.snmp_ro_group | default('SNMPv3_RO', true) }} v3 auth {{ global.snmp_auth_protocol | default('SHA', true) }} {{ global.snmp_ro_auth_password }} priv {{ global.snmp_priv_protocol | default('AES', true) }} 256 {{ global.snmp_ro_priv_password }}
 {% endif %}
 {% if global.snmp_rw_user %}
-snmp-server user {{ global.snmp_rw_user }} {{ global.snmp_rw_group | default('RWGROUP', true) }} v3 auth {{ global.snmp_auth_protocol | default('SHA', true) }} {{ global.snmp_rw_auth_password }} priv {{ global.snmp_priv_protocol | default('AES', true) }} 256 {{ global.snmp_rw_priv_password }}
+snmp-server user {{ global.snmp_rw_user }} {{ global.snmp_rw_group | default('SNMPv3_RW', true) }} v3 auth {{ global.snmp_auth_protocol | default('SHA', true) }} {{ global.snmp_rw_auth_password }} priv {{ global.snmp_priv_protocol | default('AES', true) }} 256 {{ global.snmp_rw_priv_password }}
 {% endif %}
 {% if global.snmp_host %}
 snmp-server host {{ global.snmp_host }} version 3 priv {{ global.snmp_ro_user if global.snmp_ro_user else global.snmp_rw_user }}

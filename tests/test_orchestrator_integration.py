@@ -56,7 +56,7 @@ def _create_test_workbook(
         ("domain_name", "example.local"),
         ("snmp_auth_protocol", "SHA"),
         ("snmp_priv_protocol", "AES"),
-        ("snmp_ro_group", "ROGROUP"),
+        ("snmp_ro_group", "SNMPv3_RO"),
         ("snmp_ro_user", "ro-user"),
         ("snmp_ro_auth_password", "authpass"),
         ("snmp_ro_priv_password", "privpass"),
@@ -180,7 +180,7 @@ class TestOrchestratorIntegration:
             assert "permit 10.0.0.0 0.0.0.255" in config
             assert "hostname SW-TEST-01" in config
             assert "clock timezone CET 1 0" in config
-            assert "snmp-server group ROGROUP v3 priv read VIEWALL access ACL_SNMP_RO_ACCESS" in config
+            assert "snmp-server group SNMPv3_RO v3 priv read VIEWALL access ACL_SNMP_RO_ACCESS" in config
             assert "snmp-server host 10.0.1.20 version 3 priv ro-user" in config
             assert "access-class ACL_VTY_ACCESS in vrf-also" in config
             assert "vlan 20" in config
