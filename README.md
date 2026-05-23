@@ -1,5 +1,7 @@
 # Cisco Config Generator
 
+[![Tests](https://github.com/Nautomation-Prime/Cisco-Config-Generator/actions/workflows/test.yml/badge.svg)](https://github.com/Nautomation-Prime/Cisco-Config-Generator/actions/workflows/test.yml)
+
 > A ready-to-run Windows tool that generates per-device Cisco IOS-XE access switch
 > configuration files from an Excel intent workbook. **No Python installation required.**
 > Built by **[Nautomation Prime](https://nautomationprime.io)**.
