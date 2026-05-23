@@ -18,25 +18,17 @@ class ValidationError(Exception):
         super().__init__("Validation failed: " + "; ".join(errors))
 
 
-def validate_intent(
-    intent: Intent,
+def _validate_devices(
+    devices: list[Device],
     hardware_catalog: dict,
     uplink_modules: dict,
-    port_profiles: dict,
-    strict: bool = True,
 ) -> list[str]:
-    """Validate loaded intent. Returns list of error strings. Empty = valid."""
+    """Validate device rows against the hardware catalog. Returns error strings."""
     errors: list[str] = []
-    warnings: list[str] = []
-
-    vlan_ids = {v.vlan_id for v in intent.vlans}
-    device_names = {d.hostname for d in intent.devices}
-
-    # --- Devices ---
-    if not intent.devices:
+    if not devices:
         errors.append("No devices found in the Devices sheet.")
-
-    for device in intent.devices:
+        return errors
+    for device in devices:
         if not device.hostname:
             errors.append("A device row is missing a hostname.")
         if not device.mgmt_ip:
@@ -63,18 +55,31 @@ def validate_intent(
                 f"Device '{device.hostname}': timezone minutes offset {device.timezone_minutes_offset} is out of range. "
                 "Valid range: 0 to 59."
             )
+    return errors
 
-    # --- VLANs ---
+
+def _validate_vlans(vlans: list[VLAN]) -> list[str]:
+    """Validate VLAN entries for duplicates and missing names. Returns error strings."""
+    errors: list[str] = []
     seen_vlan_ids: set[int] = set()
-    for vlan in intent.vlans:
+    for vlan in vlans:
         if vlan.vlan_id in seen_vlan_ids:
             errors.append(f"Duplicate VLAN ID: {vlan.vlan_id}")
         seen_vlan_ids.add(vlan.vlan_id)
         if not vlan.vlan_name:
             errors.append(f"VLAN {vlan.vlan_id} has no name.")
+    return errors
 
-    # --- Interfaces ---
-    for iface in intent.interfaces:
+
+def _validate_interfaces(
+    interfaces: list[Interface],
+    vlan_ids: set[int],
+    device_names: set[str],
+    port_profiles: dict,
+) -> list[str]:
+    """Validate interface rows against known devices, VLANs, and profile rules. Returns error strings."""
+    errors: list[str] = []
+    for iface in interfaces:
         if iface.device_name not in device_names:
             errors.append(
                 f"Interface '{iface.interface_name}' references unknown device '{iface.device_name}'."
@@ -130,56 +135,99 @@ def validate_intent(
                 f"Interface '{iface.interface_name}' on '{iface.device_name}' "
                 f"uses profile '{iface.port_profile}' which requires a Port Channel No., but none is set."
             )
+    return errors
 
-    if intent.feature_selection.base_config:
-        global_settings = intent.global_settings
-        if global_settings.snmp_host and not (global_settings.snmp_ro_user or global_settings.snmp_rw_user):
+
+def _validate_global_settings(global_settings) -> list[str]:
+    """Validate global settings cross-field rules. Returns error strings."""
+    errors: list[str] = []
+    if global_settings.snmp_host and not (global_settings.snmp_ro_user or global_settings.snmp_rw_user):
+        errors.append(
+            "Global Settings sets snmp_host but no SNMPv3 user is defined. "
+            "Configure snmp_ro_user or snmp_rw_user, or clear snmp_host."
+        )
+    return errors
+
+
+def _validate_acls(
+    acls: list,
+    global_settings,
+    defined_acl_names: set[str],
+    check_global_references: bool,
+) -> list[str]:
+    """Validate ACL entries and cross-references in global settings. Returns error strings."""
+    errors: list[str] = []
+    valid_actions = {"permit", "deny"}
+
+    for acl in acls:
+        has_action = bool(acl.action)
+        has_network = bool(acl.network)
+
+        if acl.action and acl.action not in valid_actions:
             errors.append(
-                "Global Settings sets snmp_host but no SNMPv3 user is defined. Configure snmp_ro_user or snmp_rw_user, or clear snmp_host."
+                f"ACL '{acl.acl_name}' has invalid action '{acl.action}'. Valid actions: permit, deny."
+            )
+        if has_action != has_network:
+            errors.append(
+                f"ACL '{acl.acl_name}' entry must include both Action and Network/Host together."
+            )
+        if not acl.remark and not (has_action and has_network):
+            errors.append(
+                f"ACL '{acl.acl_name}' contains an empty entry. Populate Remark or Action + Network/Host."
             )
 
-    # --- ACLs ---
+    if check_global_references:
+        if global_settings.vty_acl and global_settings.vty_acl not in defined_acl_names:
+            errors.append(
+                f"Global Settings references VTY ACL '{global_settings.vty_acl}' but it is not defined in the ACLs sheet."
+            )
+        if (
+            global_settings.snmp_ro_user
+            and global_settings.snmp_ro_acl
+            and global_settings.snmp_ro_acl not in defined_acl_names
+        ):
+            errors.append(
+                f"Global Settings references SNMP RO ACL '{global_settings.snmp_ro_acl}' but it is not defined in the ACLs sheet."
+            )
+        if (
+            global_settings.snmp_rw_user
+            and global_settings.snmp_rw_acl
+            and global_settings.snmp_rw_acl not in defined_acl_names
+        ):
+            errors.append(
+                f"Global Settings references SNMP RW ACL '{global_settings.snmp_rw_acl}' but it is not defined in the ACLs sheet."
+            )
+
+    return errors
+
+
+def validate_intent(
+    intent: Intent,
+    hardware_catalog: dict,
+    uplink_modules: dict,
+    port_profiles: dict,
+    strict: bool = True,
+) -> list[str]:
+    """Validate loaded intent. Returns list of error strings. Empty = valid."""
+    vlan_ids = {v.vlan_id for v in intent.vlans}
+    device_names = {d.hostname for d in intent.devices}
+
+    errors: list[str] = [
+        *_validate_devices(intent.devices, hardware_catalog, uplink_modules),
+        *_validate_vlans(intent.vlans),
+        *_validate_interfaces(intent.interfaces, vlan_ids, device_names, port_profiles),
+    ]
+
+    if intent.feature_selection.base_config:
+        errors.extend(_validate_global_settings(intent.global_settings))
+
     if intent.feature_selection.acls:
-        valid_actions = {"permit", "deny"}
         defined_acl_names = {acl.acl_name for acl in intent.acls if acl.acl_name}
-
-        for acl in intent.acls:
-            has_action = bool(acl.action)
-            has_network = bool(acl.network)
-
-            if acl.action and acl.action not in valid_actions:
-                errors.append(
-                    f"ACL '{acl.acl_name}' has invalid action '{acl.action}'. Valid actions: permit, deny."
-                )
-            if has_action != has_network:
-                errors.append(
-                    f"ACL '{acl.acl_name}' entry must include both Action and Network/Host together."
-                )
-            if not acl.remark and not (has_action and has_network):
-                errors.append(
-                    f"ACL '{acl.acl_name}' contains an empty entry. Populate Remark or Action + Network/Host."
-                )
-
-        if intent.feature_selection.base_config:
-            if global_settings.vty_acl and global_settings.vty_acl not in defined_acl_names:
-                errors.append(
-                    f"Global Settings references VTY ACL '{global_settings.vty_acl}' but it is not defined in the ACLs sheet."
-                )
-            if (
-                global_settings.snmp_ro_user
-                and global_settings.snmp_ro_acl
-                and global_settings.snmp_ro_acl not in defined_acl_names
-            ):
-                errors.append(
-                    f"Global Settings references SNMP RO ACL '{global_settings.snmp_ro_acl}' but it is not defined in the ACLs sheet."
-                )
-            if (
-                global_settings.snmp_rw_user
-                and global_settings.snmp_rw_acl
-                and global_settings.snmp_rw_acl not in defined_acl_names
-            ):
-                errors.append(
-                    f"Global Settings references SNMP RW ACL '{global_settings.snmp_rw_acl}' but it is not defined in the ACLs sheet."
-                )
+        errors.extend(_validate_acls(
+            intent.acls,
+            intent.global_settings,
+            defined_acl_names,
+            check_global_references=intent.feature_selection.base_config,
+        ))
 
     return errors

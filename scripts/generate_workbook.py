@@ -314,30 +314,92 @@ def create_vlans_sheet(wb: Workbook) -> None:
 def create_interfaces_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("Interfaces")
     ws.sheet_properties.tabColor = TAB_PURPLE
-    ws.freeze_panes = "A2"
+    ws.freeze_panes = "A3"  # keep header row and instruction row visible while scrolling
 
     headers = ["Device Name", "Interface Name", "Port Profile",
-               "Description", "Access VLAN", "Voice VLAN", "Native VLAN", "Allowed VLANs", "Storm Control Broadcast", "Storm Control Multicast", "Port Channel No."]
+               "Description", "Access VLAN", "Voice VLAN", "Native VLAN", "Allowed VLANs",
+               "Storm Control Broadcast", "Storm Control Multicast", "Port Channel No."]
     widths = [22, 32, 24, 40, 14, 14, 14, 22, 24, 24, 16]
     style_header(ws, headers, widths=widths)
 
-    # Device Name — cross-sheet dropdown from Devices!$A (named range)
+    # Instruction row (row 2).
+    # Column A is left empty so the workbook loader skips this row (it skips rows with no Device Name).
+    # The instruction text spans columns B–K as a merged cell.
+    INFO_FILL = PatternFill("solid", fgColor="FFF2CC")
+    INFO_FONT = Font(name="Calibri", size=10, italic=True, color="7F6000")
+
+    ws.cell(row=2, column=1).fill = INFO_FILL
+    ws.cell(row=2, column=1).border = _border()
+
+    ws.merge_cells("B2:K2")
+    instr = ws.cell(row=2, column=2)
+    instr.value = (
+        "HOW TO USE:  Each row configures one switch port.  "
+        "Set Device Name (must match the Devices sheet), choose a Port Profile, enter a Description, "
+        "and fill in the VLAN column(s) required by the chosen profile.  "
+        "For a 24-port switch, delete rows GigabitEthernet1/0/25 to GigabitEthernet1/0/48.  "
+        "Ports NOT listed in this sheet are automatically generated as 'unused' (shutdown) ports — "
+        "only add rows for ports that need explicit configuration.  "
+        "The four TenGigabitEthernet uplink rows at the bottom are pre-set for port-channel uplinks; "
+        "update Native VLAN, Allowed VLANs, and Port Channel No. to match your environment."
+    )
+    instr.font = INFO_FONT
+    instr.fill = INFO_FILL
+    instr.alignment = Alignment(wrap_text=True, vertical="center")
+    instr.border = _border()
+    ws.row_dimensions[2].height = 52
+
+    for col in range(3, len(headers) + 1):
+        c = ws.cell(row=2, column=col)
+        c.fill = INFO_FILL
+        c.border = _border()
+
+    # Data validations
     add_list_validation(ws, col=1, formula="DeviceNames")
-    # Port Profile — inline list from pack YAML
     add_list_validation(ws, col=3, formula='"' + ",".join(PROFILES) + '"')
-    # Access VLAN / Voice VLAN / Native VLAN — cross-sheet dropdown from VLANs!$A (named range)
     add_list_validation(ws, col=5, formula="VLANIDs")
     add_list_validation(ws, col=6, formula="VLANIDs")
     add_list_validation(ws, col=7, formula="VLANIDs")
 
-    example_rows = [
-        ("SW-OFFICE-01", "GigabitEthernet1/0/1",    "access-voip",              "CLIENT: PC/Phone - Desk 1",   20, 30,  "",  "",            "",          "",          ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/2",    "access-printer",           "PRINTER: Floor 1",            20, "",  "",  "",            "",          "",          ""),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap-trunk",          "WAP - Lobby",                 "", "",  40,  "10,20,40",    "1.00 0.70", "1.00 0.70", ""),
-        ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
-        ("SW-OFFICE-01", "TenGigabitEthernet1/1/2", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
-    ]
-    for i, row_data in enumerate(example_rows):
+    device = "SW-OFFICE-01"
+
+    # 48 access ports — GigabitEthernet1/0/1 through GigabitEthernet1/0/48
+    # Profile pre-set to access-voip (most common). Change per port as required.
+    # Fill in Access VLAN and Voice VLAN for each port before running the generator.
+    for i, port in enumerate(range(1, 49)):
+        row_data = (
+            device,
+            f"GigabitEthernet1/0/{port}",
+            "access-voip",
+            "",  # description
+            "",  # access vlan
+            "",  # voice vlan
+            "",  # native vlan
+            "",  # allowed vlans
+            "",  # storm control broadcast
+            "",  # storm control multicast
+            "",  # port channel no.
+        )
+        ws.append(row_data)
+        apply_row_style(ws, ws.max_row, len(headers), alt=(i % 2 == 1))
+
+    # 4 NM-4X uplink ports — TenGigabitEthernet1/1/1 through TenGigabitEthernet1/1/4
+    # Pre-configured as two port-channels: Po1 = Te1/1/1+Te1/1/2, Po2 = Te1/1/3+Te1/1/4
+    for i, port in enumerate(range(1, 5)):
+        po_num = 1 if port <= 2 else 2
+        row_data = (
+            device,
+            f"TenGigabitEthernet1/1/{port}",
+            "trunk-uplink-portchannel",
+            f"L:Po{po_num}  R:Po{po_num} Uplink to Core",
+            "",          # access vlan
+            "",          # voice vlan
+            "",          # native vlan — fill in
+            "",          # allowed vlans — fill in
+            "1.00 0.70", # storm control broadcast
+            "1.00 0.70", # storm control multicast
+            po_num,      # port channel number
+        )
         ws.append(row_data)
         apply_row_style(ws, ws.max_row, len(headers), alt=(i % 2 == 1))
 

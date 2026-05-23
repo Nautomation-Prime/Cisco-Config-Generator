@@ -33,8 +33,37 @@ def _header_map(ws: Worksheet) -> dict[str, int]:
     return headers
 
 
+def _validate_required_headers(headers: dict[str, int], required: list[str], sheet_name: str) -> None:
+    """Raise ValueError listing any required column headers absent from the sheet."""
+    missing = [h for h in required if h not in headers]
+    if missing:
+        raise ValueError(
+            f"Sheet '{sheet_name}' is missing required column(s): "
+            + ", ".join(f"'{h}'" for h in missing)
+            + f". Found: {list(headers.keys())}"
+        )
+
+
+def _parse_int_cell(raw: Any, field: str, row: int, sheet: str, default: int | None = None) -> int | None:
+    """Parse a cell value as int, raising ValueError with row/field context if it fails."""
+    if not str(raw).strip():
+        return default
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        raise ValueError(
+            f"Sheet '{sheet}', row {row}, column '{field}': expected integer, got '{raw}'."
+        )
+
+
 def _load_devices(ws: Worksheet) -> list[Device]:
     headers = _header_map(ws)
+    _validate_required_headers(
+        headers,
+        ["hostname", "mgmt_ip", "mgmt_vlan", "default_gateway", "model", "uplink_module"],
+        ws.title,
+    )
+    sheet = ws.title
     devices: list[Device] = []
     for row in range(2, ws.max_row + 1):
         hostname = _cell_value(ws, row, headers.get("hostname", 1))
@@ -47,14 +76,14 @@ def _load_devices(ws: Worksheet) -> list[Device]:
         devices.append(Device(
             hostname=str(hostname).strip(),
             mgmt_ip=str(_cell_value(ws, row, headers.get("mgmt_ip", 2))).strip(),
-            mgmt_vlan=int(_cell_value(ws, row, headers.get("mgmt_vlan", 3)) or 1),
+            mgmt_vlan=_parse_int_cell(_cell_value(ws, row, headers.get("mgmt_vlan", 3)), "Mgmt VLAN", row, sheet, default=1),
             default_gateway=str(_cell_value(ws, row, headers.get("default_gateway", 4))).strip(),
             model=str(_cell_value(ws, row, headers.get("model", 5))).strip(),
             uplink_module=str(_cell_value(ws, row, headers.get("uplink_module", 6))).strip(),
             site=str(_cell_value(ws, row, headers.get("site", 7))).strip(),
             timezone=str(_cell_value(ws, row, headers.get("timezone", 8)) or "GMT").strip(),
-            timezone_hours_offset=int(timezone_hours_raw) if str(timezone_hours_raw).strip() else 0,
-            timezone_minutes_offset=int(timezone_minutes_raw) if str(timezone_minutes_raw).strip() else 0,
+            timezone_hours_offset=_parse_int_cell(timezone_hours_raw, "Timezone Hours", row, sheet, default=0),
+            timezone_minutes_offset=_parse_int_cell(timezone_minutes_raw, "Timezone Minutes", row, sheet, default=0),
             mgmt_subnet=str(_cell_value(ws, row, headers.get("mgmt_subnet", 9)) or "255.255.255.0").strip(),
         ))
     return devices
@@ -62,13 +91,15 @@ def _load_devices(ws: Worksheet) -> list[Device]:
 
 def _load_vlans(ws: Worksheet) -> list[VLAN]:
     headers = _header_map(ws)
+    _validate_required_headers(headers, ["vlan_id", "vlan_name"], ws.title)
+    sheet = ws.title
     vlans: list[VLAN] = []
     for row in range(2, ws.max_row + 1):
         vlan_id = _cell_value(ws, row, headers.get("vlan_id", 1))
         if not vlan_id:
             continue
         vlans.append(VLAN(
-            vlan_id=int(vlan_id),
+            vlan_id=_parse_int_cell(vlan_id, "VLAN ID", row, sheet) or 0,
             vlan_name=str(_cell_value(ws, row, headers.get("vlan_name", 2))).strip(),
             description=str(_cell_value(ws, row, headers.get("description", 3))).strip(),
         ))
@@ -77,6 +108,8 @@ def _load_vlans(ws: Worksheet) -> list[VLAN]:
 
 def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Interface]:
     headers = _header_map(ws)
+    _validate_required_headers(headers, ["device_name", "interface_name", "port_profile"], ws.title)
+    sheet = ws.title
     interfaces: list[Interface] = []
     for row in range(2, ws.max_row + 1):
         device_name = _cell_value(ws, row, headers.get("device_name", 1))
@@ -105,13 +138,13 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
             interface_name=str(_cell_value(ws, row, headers.get("interface_name", 2))).strip(),
             port_profile=port_profile,
             description=str(_cell_value(ws, row, headers.get("description", 4))).strip(),
-            access_vlan=int(access_vlan_raw) if access_vlan_raw else None,
-            voice_vlan=int(voice_vlan_raw) if voice_vlan_raw else None,
-            native_vlan=int(native_vlan_raw) if native_vlan_raw else None,
+            access_vlan=_parse_int_cell(access_vlan_raw, "Access VLAN", row, sheet),
+            voice_vlan=_parse_int_cell(voice_vlan_raw, "Voice VLAN", row, sheet),
+            native_vlan=_parse_int_cell(native_vlan_raw, "Native VLAN", row, sheet),
             allowed_vlans=str(allowed_vlans_raw).strip(),
             storm_control_broadcast=str(storm_control_broadcast_raw).strip(),
             storm_control_multicast=str(storm_control_multicast_raw).strip(),
-            port_channel_number=int(port_channel_raw) if port_channel_raw else None,
+            port_channel_number=_parse_int_cell(port_channel_raw, "Port Channel No.", row, sheet),
             qos_trust_dscp=qos_trust_dscp,
             template_hint=template_hint,
         ))
@@ -264,6 +297,7 @@ def _load_feature_selection(ws: Worksheet) -> FeatureSelection:
 def _load_acls(ws: Worksheet) -> list[ACLEntry]:
     """Reads ACL entries from the ACLs sheet."""
     headers = _header_map(ws)
+    _validate_required_headers(headers, ["acl_name"], ws.title)
     entries: list[ACLEntry] = []
     for row in range(2, ws.max_row + 1):
         acl_name = _cell_value(ws, row, headers.get("acl_name", 1))

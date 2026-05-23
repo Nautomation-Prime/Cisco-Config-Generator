@@ -8,6 +8,7 @@ class TemplateRegistry:
     """Resolves template hints to .j2 filenames and render order."""
 
     def __init__(self, template_map: dict[str, Any], templates_dir: Path):
+        """Initialise with a hint→template mapping and the directory containing .j2 files."""
         self._map = template_map
         self._dir = templates_dir
 
@@ -22,7 +23,9 @@ class TemplateRegistry:
         return entry["template"], entry.get("order", 99)
 
     def list_hints(self) -> list[str]:
+        """Return all registered template hint keys."""
         return list(self._map.keys())
 
     def template_path(self, filename: str) -> Path:
+        """Return the absolute path to a template file by filename."""
         return self._dir / filename
