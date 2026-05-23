@@ -38,7 +38,12 @@ class Orchestrator:
         pack = load_pack(str(self.pack_path))
 
         self._progress("Reading workbook...")
-        intent = load_workbook(self.workbook_path, port_profiles=pack.port_profiles)
+        intent = load_workbook(
+            self.workbook_path,
+            port_profiles=pack.port_profiles,
+            hardware_catalog=pack.hardware_catalog,
+            uplink_modules=pack.uplink_modules,
+        )
 
         self._progress("Validating intent...")
         errors = validate_intent(

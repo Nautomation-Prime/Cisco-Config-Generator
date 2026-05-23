@@ -129,10 +129,10 @@ def create_instructions_sheet(wb: Workbook) -> None:
     # Sheet guide table
     guide = [
         ("Sheet", "What to fill in"),
-        ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Each device needs a unique Hostname, Management IP, VLAN, Default Gateway, timezone label, and timezone hour/minute offsets."),
+        ("Devices", "One row per switch. Select Model and Uplink Module from the dropdowns. Those hardware choices drive the full physical interface inventory used by the generator. Each device needs a unique Hostname, Management IP, VLAN, Default Gateway, timezone label, and timezone hour/minute offsets."),
         ("Global Settings", "Settings shared across all devices — NTP/DNS servers, TACACS+ servers and key, SNMPv3 RO/RW credentials, SNMP host/location/contact, ACL names for VTY and SNMP access (bodies defined in the ACLs sheet), syslog server, banner, enable secret, and local admin credentials."),
         ("VLANs", "Define all VLANs for the site. VLAN IDs entered here automatically appear in the Access VLAN and Voice VLAN dropdowns on the Interfaces sheet."),
-        ("Interfaces", "One row per port per device. Pick a Port Profile (dropdown) and add a description. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN, optional Allowed VLANs, optional Storm Control Broadcast/Multicast overrides, and Port Channel No. where required; access ports use Access/Voice VLAN."),
+        ("Interfaces", "Add rows only for ports that need explicit config. The generator derives the full interface list from each device's selected Model and Uplink Module; any omitted ports default to the unused profile and render as shutdown ports. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN, optional Allowed VLANs, optional Storm Control Broadcast/Multicast overrides, and Port Channel No. where required; access ports use Access/Voice VLAN."),
         ("ACLs", "Define IP access control lists used for VTY and SNMP access restriction. One row per ACL entry: ACL Name, optional Remark, Action (permit/deny), Network/Host, and optional Wildcard mask. ACL names must match those set in Global Settings (vty_acl, snmp_ro_acl, snmp_rw_acl)."),
         ("Feature Selection", "Toggle which config sections to generate (Yes/No). Useful if you only need to regenerate interface configs, for example."),
     ]
@@ -168,7 +168,8 @@ def create_instructions_sheet(wb: Workbook) -> None:
 
     tips = [
         "• Fill in the VLANs sheet before the Interfaces sheet so VLAN dropdowns are populated.",
-        "• Fill in the Devices sheet before the Interfaces sheet so the Device Name dropdown works.",
+        "• Fill in the Devices sheet before the Interfaces sheet so the Device Name dropdown works and the generator can derive the full port inventory.",
+        "• You only need to add rows on the Interfaces sheet for ports that are in use or need custom settings. Omitted ports are auto-generated as unused from the selected model and uplink module.",
         "• To add a new switch model or port profile, edit the YAML files in packs/default/ and re-run scripts/generate_workbook.py.",
         "• Save your completed workbook with a descriptive name (e.g. site-london-2024.xlsx).",
         "• Generated configs are written to the output\\ folder — one .cfg file per device.",
@@ -335,7 +336,6 @@ def create_interfaces_sheet(wb: Workbook) -> None:
         ("SW-OFFICE-01", "GigabitEthernet1/0/3",    "access-ap-trunk",          "WAP - Lobby",                 "", "",  40,  "10,20,40",    "1.00 0.70", "1.00 0.70", ""),
         ("SW-OFFICE-01", "TenGigabitEthernet1/1/1", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
         ("SW-OFFICE-01", "TenGigabitEthernet1/1/2", "trunk-uplink-portchannel", "L:Po1  R:Po1 Uplink to Core", "", "",  99,  "10,20,40,99", "1.00 0.70", "1.00 0.70", 1),
-        ("SW-OFFICE-01", "GigabitEthernet1/0/48",   "unused",                   "",                            "", "",  "",  "",            "",          "",          ""),
     ]
     for i, row_data in enumerate(example_rows):
         ws.append(row_data)

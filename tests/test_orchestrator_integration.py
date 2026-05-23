@@ -8,7 +8,13 @@ from openpyxl import Workbook
 from cisco_config_generator.orchestrator import Orchestrator
 
 
-def _create_test_workbook(path: Path) -> None:
+def _create_test_workbook(
+    path: Path,
+    *,
+    model: str = "C9200-48P",
+    uplink_module: str = "NM-4X",
+    interface_rows: list[list[object]] | None = None,
+) -> None:
     wb = Workbook()
 
     devices_ws = wb.active
@@ -34,8 +40,8 @@ def _create_test_workbook(path: Path) -> None:
             "10.0.10.2",
             10,
             "10.0.10.1",
-            "C9200-48P",
-            "NM-4X",
+            model,
+            uplink_module,
             "HQ",
             "CET",
             1,
@@ -82,7 +88,7 @@ def _create_test_workbook(path: Path) -> None:
             "Port Channel No.",
         ]
     )
-    interfaces_ws.append(
+    rows = interface_rows or [
         [
             "SW-TEST-01",
             "GigabitEthernet1/0/1",
@@ -95,9 +101,7 @@ def _create_test_workbook(path: Path) -> None:
             "",
             "",
             "",
-        ]
-    )
-    interfaces_ws.append(
+        ],
         [
             "SW-TEST-01",
             "TenGigabitEthernet1/1/1",
@@ -110,9 +114,7 @@ def _create_test_workbook(path: Path) -> None:
             "1.00 0.70",
             "1.00 0.70",
             1,
-        ]
-    )
-    interfaces_ws.append(
+        ],
         [
             "SW-TEST-01",
             "TenGigabitEthernet1/1/2",
@@ -125,8 +127,10 @@ def _create_test_workbook(path: Path) -> None:
             "1.00 0.70",
             "1.00 0.70",
             1,
-        ]
-    )
+        ],
+    ]
+    for row in rows:
+        interfaces_ws.append(row)
 
     acls_ws = wb.create_sheet("ACLs")
     acls_ws.append(["ACL Name", "Remark", "Action", "Network/Host", "Wildcard"])
@@ -190,3 +194,52 @@ class TestOrchestratorIntegration:
             assert "storm-control multicast level 0.10 0.07" not in config
             assert "banner motd ^" in config
             assert config.index("hostname SW-TEST-01") < config.index("ip access-list standard ACL_VTY_ACCESS")
+
+    def test_orchestrator_derives_missing_interfaces_from_selected_hardware(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        pack_path = repo_root / "packs" / "default"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            workbook_path = tmp_path / "intent.xlsx"
+            output_dir = tmp_path / "output"
+            _create_test_workbook(
+                workbook_path,
+                model="C9200-24P",
+                uplink_module="NM-4X",
+                interface_rows=[
+                    [
+                        "SW-TEST-01",
+                        "GigabitEthernet1/0/1",
+                        "access-user",
+                        "Client Port",
+                        20,
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                    ],
+                ],
+            )
+
+            orchestrator = Orchestrator(
+                pack_path=pack_path,
+                workbook_path=workbook_path,
+                output_dir=output_dir,
+            )
+
+            written = orchestrator.run()
+
+            assert len(written) == 1
+            config = written[0].read_text()
+
+            assert "interface GigabitEthernet1/0/1" in config
+            assert "switchport access vlan 20" in config
+            assert config.count("default interface ") == 27
+            assert "default interface GigabitEthernet1/0/2" in config
+            assert "default interface GigabitEthernet1/0/24" in config
+            assert "default interface TenGigabitEthernet1/1/1" in config
+            assert "default interface TenGigabitEthernet1/1/4" in config
+            assert "default interface GigabitEthernet1/0/25" not in config

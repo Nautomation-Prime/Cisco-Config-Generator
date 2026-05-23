@@ -38,6 +38,7 @@ python_runtime\python.exe scripts\generate_workbook.py
 ```
 
 This creates `assets/workbook_template.xlsx`. Open it, fill in your intent, and save.
+You only need to add interface rows for ports that need non-default behaviour; the generator derives the full port inventory from each device's selected model and uplink module, and treats omitted ports as unused.
 
 ### 3. Run the tool
 
@@ -108,7 +109,7 @@ The generator validates that every ACL name referenced in Global Settings is def
 | **Devices** | One row per switch — hostname, IP, model, uplink module, timezone label, timezone hour/minute offsets |
 | **Global Settings** | Shared settings — NTP, DNS, SNMP, banner, AAA, ACL names. `snmp_host` is only rendered when at least one SNMPv3 user is defined |
 | **VLANs** | VLAN ID, name, description |
-| **Interfaces** | Per-device per-port intent — profile selection, description, VLANs, optional trunk allowed VLAN list, optional storm-control broadcast/multicast overrides, and port-channel number where required |
+| **Interfaces** | Add rows only for ports that need explicit config — the generator derives the full per-device interface inventory from the selected model and uplink module, and any omitted ports default to unused/shutdown |
 | **ACLs** | Standard ACL entries — name, remark, action, network/host, wildcard |
 | **Feature Selection** | Toggle which config sections to generate (Yes/No) |
 

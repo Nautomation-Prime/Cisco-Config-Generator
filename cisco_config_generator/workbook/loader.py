@@ -118,6 +118,91 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
     return interfaces
 
 
+def _build_interface_names(prefix: str, port_start: Any, port_count: Any) -> list[str]:
+    if not prefix:
+        return []
+
+    start = int(port_start or 1)
+    count = int(port_count or 0)
+    return [f"{prefix}{port_number}" for port_number in range(start, start + count)]
+
+
+def _build_unused_interface(
+    device_name: str,
+    interface_name: str,
+    port_profiles: dict[str, Any],
+) -> Interface:
+    unused_profile = port_profiles.get("unused", {})
+    return Interface(
+        device_name=device_name,
+        interface_name=interface_name,
+        port_profile="unused",
+        template_hint=str(unused_profile.get("template_hint", "interfaces_unused")),
+    )
+
+
+def _expand_interfaces_from_hardware(
+    devices: list[Device],
+    interfaces: list[Interface],
+    hardware_catalog: dict[str, Any],
+    uplink_modules: dict[str, Any],
+    port_profiles: dict[str, Any],
+) -> list[Interface]:
+    if not devices or not hardware_catalog or "unused" not in port_profiles:
+        return interfaces
+
+    interfaces_by_device: dict[str, list[Interface]] = {}
+    for interface in interfaces:
+        interfaces_by_device.setdefault(interface.device_name, []).append(interface)
+
+    expanded: list[Interface] = []
+    known_devices = {device.hostname for device in devices}
+
+    for device in devices:
+        model_data = hardware_catalog.get(device.model, {})
+        module_data = uplink_modules.get(device.uplink_module, {})
+        device_interfaces = interfaces_by_device.pop(device.hostname, [])
+
+        inventory = [
+            *_build_interface_names(
+                str(model_data.get("interface_prefix", "") or ""),
+                model_data.get("access_port_start", 1),
+                model_data.get("access_ports", 0),
+            ),
+            *_build_interface_names(
+                str(module_data.get("interface_prefix", "") or ""),
+                module_data.get("uplink_port_start", 1),
+                module_data.get("uplink_ports", 0),
+            ),
+        ]
+
+        if not inventory:
+            expanded.extend(device_interfaces)
+            continue
+
+        inventory_names = set(inventory)
+        interface_overrides: dict[str, list[Interface]] = {}
+        for interface in device_interfaces:
+            interface_overrides.setdefault(interface.interface_name, []).append(interface)
+
+        for interface_name in inventory:
+            overrides = interface_overrides.get(interface_name)
+            if overrides:
+                expanded.extend(overrides)
+                continue
+            expanded.append(_build_unused_interface(device.hostname, interface_name, port_profiles))
+
+        for interface in device_interfaces:
+            if interface.interface_name not in inventory_names:
+                expanded.append(interface)
+
+    for interface in interfaces:
+        if interface.device_name not in known_devices:
+            expanded.append(interface)
+
+    return expanded
+
+
 def _load_global_settings(ws: Worksheet) -> GlobalSettings:
     """Reads key-value pairs from columns A and B."""
     kv: dict[str, Any] = {}
@@ -194,10 +279,14 @@ def _load_acls(ws: Worksheet) -> list[ACLEntry]:
     return entries
 
 
-def load_workbook(path: str | Path, port_profiles: dict[str, Any] | None = None) -> Intent:
+def load_workbook(
+    path: str | Path,
+    port_profiles: dict[str, Any] | None = None,
+    hardware_catalog: dict[str, Any] | None = None,
+    uplink_modules: dict[str, Any] | None = None,
+) -> Intent:
     """Parse an intent workbook and return an Intent object."""
     wb: Workbook = openpyxl.load_workbook(str(path), data_only=True)
-    sheet_names = [s.lower() for s in wb.sheetnames]
 
     def _get_sheet(name: str) -> Worksheet | None:
         for sname in wb.sheetnames:
@@ -212,10 +301,20 @@ def load_workbook(path: str | Path, port_profiles: dict[str, Any] | None = None)
     features_ws = _get_sheet("feature selection")
     acls_ws = _get_sheet("acls")
 
+    devices = _load_devices(devices_ws) if devices_ws else []
+    loaded_interfaces = _load_interfaces(interfaces_ws, port_profiles or {}) if interfaces_ws else []
+    interfaces = _expand_interfaces_from_hardware(
+        devices=devices,
+        interfaces=loaded_interfaces,
+        hardware_catalog=hardware_catalog or {},
+        uplink_modules=uplink_modules or {},
+        port_profiles=port_profiles or {},
+    )
+
     return Intent(
-        devices=_load_devices(devices_ws) if devices_ws else [],
+        devices=devices,
         vlans=_load_vlans(vlans_ws) if vlans_ws else [],
-        interfaces=_load_interfaces(interfaces_ws, port_profiles or {}) if interfaces_ws else [],
+        interfaces=interfaces,
         global_settings=_load_global_settings(global_ws) if global_ws else GlobalSettings(),
         feature_selection=_load_feature_selection(features_ws) if features_ws else FeatureSelection(),
         acls=_load_acls(acls_ws) if acls_ws else [],
