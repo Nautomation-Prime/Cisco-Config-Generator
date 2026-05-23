@@ -44,7 +44,7 @@ def make_intent(**kwargs) -> Intent:
                 wildcard="0.0.0.255",
             )
         ],
-        global_settings=GlobalSettings(),
+        global_settings=GlobalSettings(enable_secret="TestSecret99!"),
         feature_selection=FeatureSelection(),
     )
     for k, v in kwargs.items():

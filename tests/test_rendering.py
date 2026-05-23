@@ -196,3 +196,17 @@ class TestWriters:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = write_config(tmpdir, "MY-SWITCH", "content")
             assert path.name == "MY-SWITCH.cfg"
+
+    def test_write_config_strips_path_traversal(self):
+        """Hostnames with path separators should be sanitised — output stays in the chosen directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = write_config(tmpdir, "../escaped", "content")
+            assert path.parent.resolve() == Path(tmpdir).resolve()
+            assert path.name == "escaped.cfg"
+
+    def test_write_config_strips_subdirectory_component(self):
+        """A hostname like 'subdir/switch-01' should write switch-01.cfg inside the output dir."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = write_config(tmpdir, "subdir/switch-01", "content")
+            assert path.name == "switch-01.cfg"
+            assert path.parent.resolve() == Path(tmpdir).resolve()

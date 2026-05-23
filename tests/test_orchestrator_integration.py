@@ -61,6 +61,7 @@ def _create_test_workbook(
         ("snmp_ro_auth_password", "authpass"),
         ("snmp_ro_priv_password", "privpass"),
         ("snmp_host", "10.0.1.20"),
+        ("enable_secret", "TestSecret99!"),
         ("vty_acl", "ACL_VTY_ACCESS"),
         ("snmp_ro_acl", "ACL_SNMP_RO_ACCESS"),
         ("banner_motd", "TEST BANNER"),

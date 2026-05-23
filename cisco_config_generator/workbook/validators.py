@@ -28,9 +28,16 @@ def _validate_devices(
     if not devices:
         errors.append("No devices found in the Devices sheet.")
         return errors
+    seen_hostnames: set[str] = set()
     for device in devices:
         if not device.hostname:
             errors.append("A device row is missing a hostname.")
+        elif device.hostname in seen_hostnames:
+            errors.append(
+                f"Duplicate hostname '{device.hostname}': each device must have a unique hostname."
+            )
+        else:
+            seen_hostnames.add(device.hostname)
         if not device.mgmt_ip:
             errors.append(f"Device '{device.hostname}' is missing a management IP.")
         if not device.default_gateway:
@@ -145,6 +152,16 @@ def _validate_global_settings(global_settings) -> list[str]:
         errors.append(
             "Global Settings sets snmp_host but no SNMPv3 user is defined. "
             "Configure snmp_ro_user or snmp_rw_user, or clear snmp_host."
+        )
+    if global_settings.enable_secret == "changeme":
+        errors.append(
+            "Global Settings: 'enable_secret' is the default placeholder value. "
+            "Replace it with a strong enable secret before deploying."
+        )
+    if global_settings.local_username and global_settings.local_password == "changeme":
+        errors.append(
+            "Global Settings: 'local_password' is the default placeholder value. "
+            "Replace it with a strong password before deploying."
         )
     return errors
 

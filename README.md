@@ -1,14 +1,18 @@
 # Cisco Config Generator
 
-> Generate per-device Cisco IOS-XE access switch configuration files from an Excel intent workbook.
-> Built by **Nautomation Prime**.
+> A ready-to-run Windows tool that generates per-device Cisco IOS-XE access switch
+> configuration files from an Excel intent workbook. **No Python installation required.**
+> Built by **[Nautomation Prime](https://nautomationprime.io)**.
 
 ---
 
 ## Overview
 
 The Cisco Config Generator reads network intent from a structured Excel workbook and renders
-per-device `.cfg` files using Jinja2 templates. It is designed as a customisable product:
+per-device `.cfg` files using Jinja2 templates. It ships with a self-contained Python runtime
+so it runs straight from the folder you download — no software to install, no admin rights needed.
+
+It is designed as a customisable product:
 the core Python engine never needs to change between customers — all site-specific templates
 and settings live in a **pack** folder.
 
@@ -20,18 +24,26 @@ Excel intent → Python core → Jinja2 templates → per-device .cfg files
 
 ## Quick Start
 
-### 1. Setup (Windows)
+### 0. Download
+
+Head to the **[Releases page](https://github.com/Nautomation-Prime/Cisco-Config-Generator/releases)** on GitHub, download the latest ZIP, extract it anywhere on your machine, and open the folder.
+
+> Alternatively, clone the repository with `git clone https://github.com/Nautomation-Prime/Cisco-Config-Generator.git`.
+
+### 1. First-time Setup (one-time only)
 
 ```bat
 setup.bat
 ```
 
-This downloads a portable Python 3.12 runtime and installs all dependencies.
-Internet connection required (one-time only).
+This downloads a portable Python 3.12 runtime and installs all dependencies **into the tool's own folder**.
+Nothing is installed system-wide. An internet connection is required for this step only.
 
-### 2. Generate the intent workbook template
+### 2. Fill in your intent workbook
 
-The workbook template is auto-generated on first run. To regenerate it manually:
+A **pre-filled sample workbook** is included at `assets/sample_intent.xlsx` — open it to see a complete two-switch site example before building your own.
+
+To generate a blank template:
 
 ```bat
 python_runtime\python.exe scripts\generate_workbook.py
@@ -217,9 +229,11 @@ python_runtime\python.exe -m pytest tests/ -v
 
 ## Requirements
 
-- Windows (launcher scripts are `.bat`)
-- Internet connection for first-time setup (downloads portable Python 3.12)
-- See `requirements.txt` for Python dependencies
+- Windows 10 / Windows 11 (64-bit)
+- Internet connection for first-time setup only — the portable Python 3.12 runtime is downloaded once and stored in the `python_runtime\` folder
+- No Python installation required — the runtime is fully self-contained
+
+> **Developers / contributors:** a standard `.venv` is also supported. Run `pip install -e .[dev]` to get the editable install with pytest.
 
 ---
 
@@ -239,6 +253,13 @@ Cisco-Config-Generator/
 ├─ setup.bat                 # First-time setup
 └─ run.bat                   # Launch the tool
 ```
+
+---
+
+## About Nautomation Prime
+
+The Cisco Config Generator is part of the **[Nautomation Prime](https://nautomationprime.io)** collection of practical network automation tools and learning resources.
+Visit the website to discover more tools, read guides, and explore showcase projects built around real-world network engineering.
 
 ---
 

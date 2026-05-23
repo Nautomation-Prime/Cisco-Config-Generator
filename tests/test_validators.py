@@ -156,3 +156,32 @@ class TestValidation:
         intent = make_intent(interfaces=[iface])
         errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
         assert any("Storm Control Multicast" in e for e in errors)
+
+    def test_duplicate_hostnames_rejected(self):
+        devices = [make_device(), make_device()]  # both hostname SW-TEST-01
+        intent = make_intent(devices=devices)
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("Duplicate hostname" in e for e in errors)
+
+    def test_placeholder_enable_secret_rejected(self):
+        global_settings = GlobalSettings(enable_secret="changeme")
+        intent = make_intent(global_settings=global_settings)
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("enable_secret" in e for e in errors)
+
+    def test_placeholder_local_password_rejected(self):
+        global_settings = GlobalSettings(
+            enable_secret="StrongSecret99!",
+            local_username="admin",
+            local_password="changeme",
+        )
+        intent = make_intent(global_settings=global_settings)
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("local_password" in e for e in errors)
+
+    def test_placeholder_local_password_ignored_without_username(self):
+        """local_password placeholder is only flagged when a local_username is also set."""
+        global_settings = GlobalSettings(enable_secret="StrongSecret99!", local_username="")
+        intent = make_intent(global_settings=global_settings)
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert not any("local_password" in e for e in errors)
