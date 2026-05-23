@@ -22,6 +22,8 @@ and settings live in a **pack** folder.
 Excel intent → Python core → Jinja2 templates → per-device .cfg files
 ```
 
+![Cisco Config Generator TUI](assets/tui_screenshot.png)
+
 ---
 
 ## Quick Start
