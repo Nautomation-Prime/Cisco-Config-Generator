@@ -14,7 +14,7 @@ from textual.widgets import (
     Header,
     Input,
     Label,
-    Log,
+    RichLog,
     Select,
     Static,
 )
@@ -109,7 +109,7 @@ class CiscoConfigGeneratorApp(App):
 
             with Vertical(id="log-panel"):
                 yield Static("[bold]Output[/bold]")
-                yield Log(id="log-view", auto_scroll=True)
+                yield RichLog(id="log-view", auto_scroll=True, markup=True)
 
         yield Footer()
 
@@ -188,11 +188,11 @@ class CiscoConfigGeneratorApp(App):
         self._clear_log()
 
     def _append_log(self, message: str) -> None:
-        log_view = self.query_one("#log-view", Log)
-        log_view.write_line(message)
+        log_view = self.query_one("#log-view", RichLog)
+        log_view.write(message)
 
     def _clear_log(self) -> None:
-        log_view = self.query_one("#log-view", Log)
+        log_view = self.query_one("#log-view", RichLog)
         log_view.clear()
 
     def _set_status(self, message: str) -> None:
