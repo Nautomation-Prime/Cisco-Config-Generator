@@ -1,10 +1,30 @@
 features:
-  - name: acls
-    description: "IP access control lists (VTY and SNMP access restriction)"
+  - name: base_config
+    description: "Base switch configuration (hostname, AAA, NTP, SNMP, STP, SSH hardening)"
     enabled_by_default: true
 
-  - name: base_config
-    description: "Base switch configuration (hostname, AAA, NTP, SNMP, STP, hardening)"
+  - name: aaa
+    description: "AAA configuration — aaa new-model, TACACS+ group, authentication and authorisation commands"
+    enabled_by_default: true
+
+  - name: snmp
+    description: "SNMPv3 configuration — groups, users, host, location, contact"
+    enabled_by_default: true
+
+  - name: ntp
+    description: "NTP server configuration"
+    enabled_by_default: true
+
+  - name: dhcp_snooping
+    description: "DHCP snooping configuration"
+    enabled_by_default: true
+
+  - name: spanning_tree
+    description: "Spanning tree configuration — mode rapid-pvst, portfast BPDUguard default"
+    enabled_by_default: true
+
+  - name: banner
+    description: "Banner MOTD"
     enabled_by_default: true
 
   - name: vlans
@@ -13,4 +33,8 @@ features:
 
   - name: interfaces
     description: "Interface configuration (access, trunk, and unused ports)"
+    enabled_by_default: true
+
+  - name: acls
+    description: "IP access control lists (VTY and SNMP access restriction)"
     enabled_by_default: true

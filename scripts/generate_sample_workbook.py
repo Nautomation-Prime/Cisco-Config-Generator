@@ -125,10 +125,16 @@ ACLS = [
 ]
 
 FEATURES = [
-    ("base_config",  "Yes"),
-    ("vlans",        "Yes"),
-    ("interfaces",   "Yes"),
-    ("acls",         "Yes"),
+    ("base_config",   "Yes"),
+    ("aaa",           "Yes"),
+    ("snmp",          "Yes"),
+    ("ntp",           "Yes"),
+    ("dhcp_snooping", "Yes"),
+    ("spanning_tree", "Yes"),
+    ("banner",        "Yes"),
+    ("vlans",         "Yes"),
+    ("interfaces",    "Yes"),
+    ("acls",          "Yes"),
 ]
 
 

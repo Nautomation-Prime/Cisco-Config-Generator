@@ -44,6 +44,7 @@ enable secret 9 {{ global.enable_secret }}
 username {{ global.local_username }} privilege 15 secret 9 {{ global.local_password }}
 {% endif %}
 !
+{% if features.aaa %}
 aaa new-model
 !
 aaa authentication fail-message #
@@ -87,6 +88,7 @@ aaa authentication login default local
 aaa authorization exec default local if-authenticated
 {% endif %}
 !
+{% endif %}
 clock timezone {{ device.timezone | default('GMT', true) }} {{ device.timezone_hours_offset | default(0, true) }} {{ device.timezone_minutes_offset | default(0, true) }}
 {% if global.summer_time_config %}
 clock summer-time {{ global.summer_time_config }}
@@ -115,6 +117,7 @@ ip ssh server algorithm mac hmac-sha1
 ip ssh time-out 15
 ip ssh source-interface Vlan{{ device.mgmt_vlan }}
 !
+{% if features.dhcp_snooping %}
 no ip dhcp snooping
 no ip dhcp snooping vlan 1-4094
 !
@@ -122,6 +125,7 @@ ip dhcp snooping
 ip dhcp snooping vlan 1-4094
 no ip dhcp snooping information option
 !
+{% endif %}
 login on-success log
 login on-failure log
 !
@@ -135,10 +139,12 @@ license boot level network-essentials addon dna-essentials
 diagnostic bootup level complete
 !
 {% endif %}
+{% if features.spanning_tree %}
 spanning-tree mode rapid-pvst
 spanning-tree extend system-id
 spanning-tree portfast bpduguard default
 !
+{% endif %}
 {% if 'C92' in device.model or 'C93' in device.model %}
 redundancy
  mode sso
@@ -169,7 +175,7 @@ no ip http secure-server
 logging host {{ global.syslog_server }}
 !
 {% endif %}
-{% if global.snmp_ro_user or global.snmp_rw_user %}
+{% if features.snmp and (global.snmp_ro_user or global.snmp_rw_user) %}
 snmp-server view VIEWALL iso included
 snmp-server trap link ietf
 snmp ifmib ifindex persist
@@ -231,13 +237,15 @@ line vty 5 15
  transport input ssh
  escape-character 3
 !
-{% if global.ntp_servers %}
+{% if features.ntp and global.ntp_servers %}
 {% for ntp in global.ntp_servers %}
 ntp server {{ ntp }}
 {% endfor %}
 !
 {% endif %}
+{% if features.banner %}
 banner motd ^
 {{ global.banner_motd | default('AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised.', true) }}
 ^
 !
+{% endif %}

@@ -98,6 +98,12 @@ class FeatureSelection:
     vlans: bool = True
     interfaces: bool = True
     acls: bool = True
+    aaa: bool = True
+    snmp: bool = True
+    ntp: bool = True
+    dhcp_snooping: bool = True
+    spanning_tree: bool = True
+    banner: bool = True
 
 
 @dataclass

@@ -134,7 +134,7 @@ def create_instructions_sheet(wb: Workbook) -> None:
         ("VLANs", "Define all VLANs for the site. VLAN IDs entered here automatically appear in the Access VLAN and Voice VLAN dropdowns on the Interfaces sheet."),
         ("Interfaces", "Add rows only for ports that need explicit config. The generator derives the full interface list from each device's selected Model and Uplink Module; any omitted ports default to the unused profile and render as shutdown ports. Access/Voice/Native VLAN dropdowns are linked to the VLANs sheet. Trunk and AP-trunk ports use Native VLAN, optional Allowed VLANs, optional Storm Control Broadcast/Multicast overrides, and Port Channel No. where required; access ports use Access/Voice VLAN."),
         ("ACLs", "Define IP access control lists used for VTY and SNMP access restriction. One row per ACL entry: ACL Name, optional Remark, Action (permit/deny), Network/Host, and optional Wildcard mask. ACL names must match those set in Global Settings (vty_acl, snmp_ro_acl, snmp_rw_acl)."),
-        ("Feature Selection", "Toggle which config sections to generate (Yes/No). Useful if you only need to regenerate interface configs, for example."),
+        ("Feature Selection", "Toggle which config sections to generate (Yes/No). The top-level 'base_config' flag controls whether the base config runs at all. Sub-features (aaa, snmp, ntp, dhcp_snooping, spanning_tree, banner) let you skip individual sections within the base config \u2014 useful if those sections are already deployed or managed by another system."),
     ]
     for i, (sheet, desc) in enumerate(guide):
         row = i + 4
@@ -456,10 +456,16 @@ def create_feature_selection_sheet(wb: Workbook) -> None:
     add_list_validation(ws, col=2, formula='"Yes,No"', start_row=2, end_row=50)
 
     features = [
-        ("base_config", "Yes", "Base switch config — hostname, AAA, NTP, SNMP, STP, SSH hardening"),
-        ("vlans",       "Yes", "VLAN definitions"),
-        ("interfaces",  "Yes", "Interface config — access, trunk, and unused ports"),
-        ("acls",        "Yes", "IP access control lists — VTY and SNMP access restriction"),
+        ("base_config",    "Yes", "Base switch config — hostname, SSH hardening, management interface, IP routing off"),
+        ("aaa",            "Yes", "AAA — aaa new-model, TACACS+ group, authentication and authorisation commands"),
+        ("snmp",           "Yes", "SNMPv3 — groups, users, host, location and contact (requires SNMPv3 credentials in Global Settings)"),
+        ("ntp",            "Yes", "NTP server configuration (requires NTP servers in Global Settings)"),
+        ("dhcp_snooping",  "Yes", "DHCP snooping — enabled globally across all VLANs"),
+        ("spanning_tree",  "Yes", "Spanning tree — mode rapid-pvst, extend system-id, portfast BPDUguard default"),
+        ("banner",         "Yes", "Banner MOTD"),
+        ("vlans",          "Yes", "VLAN definitions"),
+        ("interfaces",     "Yes", "Interface config — access, trunk, and unused ports"),
+        ("acls",           "Yes", "IP access control lists — VTY and SNMP access restriction"),
     ]
     for i, row_data in enumerate(features):
         ws.append(row_data)

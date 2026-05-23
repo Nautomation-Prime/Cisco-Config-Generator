@@ -291,6 +291,12 @@ def _load_feature_selection(ws: Worksheet) -> FeatureSelection:
         vlans=kv.get("vlans", True),
         interfaces=kv.get("interfaces", True),
         acls=kv.get("acls", True),
+        aaa=kv.get("aaa", True),
+        snmp=kv.get("snmp", True),
+        ntp=kv.get("ntp", True),
+        dhcp_snooping=kv.get("dhcp_snooping", True),
+        spanning_tree=kv.get("spanning_tree", True),
+        banner=kv.get("banner", True),
     )
 
 
