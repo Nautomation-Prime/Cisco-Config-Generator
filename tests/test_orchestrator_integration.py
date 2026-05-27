@@ -133,6 +133,18 @@ def _create_test_workbook(
     for row in rows:
         interfaces_ws.append(row)
 
+    port_channels_ws = wb.create_sheet("Port-Channels")
+    port_channels_ws.append([
+        "Device Name",
+        "Port Channel No.",
+        "Description",
+        "Native VLAN",
+        "Allowed VLANs",
+        "Storm Control Broadcast",
+        "Storm Control Multicast",
+    ])
+    port_channels_ws.append(["SW-TEST-01", 1, "Uplink to Core", 10, "10,20", "1.00 0.70", "1.00 0.70"])
+
     acls_ws = wb.create_sheet("ACLs")
     acls_ws.append(["ACL Name", "Remark", "Action", "Network/Host", "Wildcard"])
     acls_ws.append(["ACL_VTY_ACCESS", "Management subnet", "permit", "10.0.0.0", "0.0.0.255"])

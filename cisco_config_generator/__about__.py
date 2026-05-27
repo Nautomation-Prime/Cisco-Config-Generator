@@ -3,8 +3,7 @@ from importlib.metadata import version as _version, PackageNotFoundError as _Pac
 __title__ = "cisco-config-generator"
 __description__ = "Cisco IOS-XE access switch configuration generator"
 __author__ = "Nautomation Prime"
-__license__ = "MIT"
-
+__license__ = "Apache 2.0"
 try:
     __version__ = _version("cisco-config-generator")
 except _PackageNotFoundError:

@@ -417,7 +417,31 @@ def create_interfaces_sheet(wb: Workbook) -> None:
 
 
 # -----------------------------------------------------------------------
-# Sheet 5 — ACLs
+# Sheet 5 — Port-Channels
+# -----------------------------------------------------------------------
+def create_port_channels_sheet(wb: Workbook) -> None:
+    ws = wb.create_sheet("Port-Channels")
+    ws.sheet_properties.tabColor = TAB_ORANGE
+    ws.freeze_panes = "A2"
+
+    headers = ["Device Name", "Port Channel No.", "Description", "Native VLAN", "Allowed VLANs", "Storm Control Broadcast", "Storm Control Multicast"]
+    widths = [22, 16, 40, 14, 22, 24, 24]
+    style_header(ws, headers, widths=widths)
+
+    add_list_validation(ws, col=1, formula="DeviceNames")
+    add_list_validation(ws, col=4, formula="VLANIDs")
+
+    example_rows = [
+        ("SW-OFFICE-01", 1, "Uplink to Core - Po1", 10, "10,20,30", "1.00 0.70", "1.00 0.70"),
+        ("SW-OFFICE-01", 2, "Server Uplink - Po2", 10, "10,20,60", "1.00 0.70", "1.00 0.70"),
+    ]
+    for i, row_data in enumerate(example_rows):
+        ws.append(row_data)
+        apply_row_style(ws, ws.max_row, len(headers), alt=(i % 2 == 1))
+
+
+# -----------------------------------------------------------------------
+# Sheet 6 — ACLs
 # -----------------------------------------------------------------------
 def create_acls_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("ACLs")
@@ -445,7 +469,7 @@ def create_acls_sheet(wb: Workbook) -> None:
 
 
 # -----------------------------------------------------------------------
-# Sheet 6 — Feature Selection
+# Sheet 7 — Feature Selection
 # -----------------------------------------------------------------------
 def create_feature_selection_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("Feature Selection")
@@ -465,6 +489,7 @@ def create_feature_selection_sheet(wb: Workbook) -> None:
         ("banner",         "Yes", "Banner MOTD"),
         ("vlans",          "Yes", "VLAN definitions"),
         ("interfaces",     "Yes", "Interface config — access, trunk, and unused ports"),
+        ("port_channels",  "Yes", "Logical Port-channel interfaces"),
         ("acls",           "Yes", "IP access control lists — VTY and SNMP access restriction"),
     ]
     for i, row_data in enumerate(features):
@@ -483,6 +508,7 @@ def main() -> None:
     create_global_settings_sheet(wb)
     create_vlans_sheet(wb)
     create_interfaces_sheet(wb)
+    create_port_channels_sheet(wb)
     create_acls_sheet(wb)
     create_feature_selection_sheet(wb)
 

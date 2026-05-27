@@ -7,7 +7,7 @@ from typing import Any
 from cisco_config_generator.pack_loader import Pack, load_pack
 from cisco_config_generator.workbook.loader import load_workbook
 from cisco_config_generator.workbook.models import (
-    Device, Interface, Intent, HardwareProfile,
+    Device, Interface, PortChannel, Intent, HardwareProfile,
 )
 from cisco_config_generator.workbook.validators import validate_intent, ValidationError
 from cisco_config_generator.rendering.engine import create_jinja_env, render_template
@@ -117,12 +117,17 @@ class Orchestrator:
             iface for iface in intent.interfaces
             if iface.device_name == device.hostname
         ]
+        device_port_channels = [
+            port_channel for port_channel in intent.port_channels
+            if port_channel.device_name == device.hostname
+        ]
 
         # Build base context dict
         context = {
             "device": device,
             "vlans": intent.vlans,
             "interfaces": device_interfaces,
+            "port_channels": device_port_channels,
             "global": intent.global_settings,
             "hardware": hardware,
             "acls": intent.acls,
@@ -158,6 +163,11 @@ class Orchestrator:
             sections.extend(
                 self._render_interfaces(device_interfaces, context, registry, jinja_env)
             )
+
+        if features.port_channels and device_port_channels:
+            tmpl, order = registry.resolve("port_channels")
+            rendered = render_template(jinja_env, tmpl, {**context, "port_channels": device_port_channels})
+            sections.append((order, rendered))
 
         # Sort by order and join
         sections.sort(key=lambda t: t[0])

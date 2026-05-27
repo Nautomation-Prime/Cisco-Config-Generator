@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from cisco_config_generator.workbook.models import (
-    ACLEntry, Device, VLAN, Interface, GlobalSettings, FeatureSelection, Intent
+    ACLEntry, Device, VLAN, Interface, PortChannel, GlobalSettings, FeatureSelection, Intent
 )
 
 

@@ -53,6 +53,18 @@ class Interface:
 
 
 @dataclass
+class PortChannel:
+    device_name: str
+    port_channel_number: int
+    description: str = ""
+    native_vlan: int | None = None
+    allowed_vlans: str = ""
+    storm_control_broadcast: str = ""
+    storm_control_multicast: str = ""
+    template_hint: str = "port_channels"
+
+
+@dataclass
 class GlobalSettings:
     domain_name: str = ""
     ntp_servers: list[str] = field(default_factory=list)
@@ -97,6 +109,7 @@ class FeatureSelection:
     base_config: bool = True
     vlans: bool = True
     interfaces: bool = True
+    port_channels: bool = True
     acls: bool = True
     aaa: bool = True
     snmp: bool = True
@@ -123,6 +136,7 @@ class Intent:
     devices: list[Device] = field(default_factory=list)
     vlans: list[VLAN] = field(default_factory=list)
     interfaces: list[Interface] = field(default_factory=list)
+    port_channels: list[PortChannel] = field(default_factory=list)
     global_settings: GlobalSettings = field(default_factory=GlobalSettings)
     feature_selection: FeatureSelection = field(default_factory=FeatureSelection)
     acls: list[ACLEntry] = field(default_factory=list)

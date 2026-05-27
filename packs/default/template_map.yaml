@@ -23,6 +23,10 @@ template_map:
     template: interfaces_trunk_portchannel.j2
     order: 30
 
+  port_channels:
+    template: port_channels.j2
+    order: 31
+
   interfaces_ap_trunk:
     template: interfaces_ap_trunk.j2
     order: 30

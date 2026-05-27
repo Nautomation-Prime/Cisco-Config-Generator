@@ -10,7 +10,7 @@ from jinja2 import Environment, DictLoader
 from cisco_config_generator.rendering.engine import create_jinja_env, render_template
 from cisco_config_generator.rendering.registry import TemplateRegistry
 from cisco_config_generator.rendering.writers import write_config
-from cisco_config_generator.workbook.models import ACLEntry, Device, VLAN, Interface, GlobalSettings
+from cisco_config_generator.workbook.models import ACLEntry, Device, VLAN, Interface, PortChannel, GlobalSettings
 
 
 class TestEngine:
@@ -83,12 +83,37 @@ class TestEngine:
             {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
         )
 
-        assert "interface Port-channel1" in result
         assert "switchport trunk allowed vlan 10,20,99" in result
         assert "switchport trunk native vlan 99" in result
-        assert result.count("storm-control broadcast level 0.10 0.07") == 3
-        assert result.count("storm-control multicast level 0.10 0.07") == 3
-        assert "interface Port-channel1\n description Uplink to Core\n switchport mode trunk\n switchport trunk allowed vlan 10,20,99\n switchport trunk native vlan 99\n switchport nonegotiate\n load-interval 30\n storm-control broadcast level 0.10 0.07\n storm-control multicast level 0.10 0.07\n ip dhcp snooping trust\n!" in result
+        assert result.count("storm-control broadcast level 0.10 0.07") == 2
+        assert result.count("storm-control multicast level 0.10 0.07") == 2
+        assert "interface Port-channel1" not in result
+
+    def test_render_port_channel_template(self):
+        templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
+        env = create_jinja_env(templates_dir)
+        port_channels = [
+            PortChannel(
+                device_name="SW-01",
+                port_channel_number=1,
+                description="Uplink to Core",
+                native_vlan=99,
+                allowed_vlans="10,20,99",
+                storm_control_broadcast="1.00 0.70",
+                storm_control_multicast="1.00 0.70",
+            )
+        ]
+
+        result = render_template(
+            env,
+            "port_channels.j2",
+            {"port_channels": port_channels, "settings": {"defaults": {"native_vlan": 1}}},
+        )
+
+        assert "interface Port-channel1" in result
+        assert "channel-group" not in result
+        assert "description Uplink to Core" in result
+        assert "no shutdown" in result
 
     def test_render_gig_portchannel_template(self):
         templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
@@ -122,10 +147,10 @@ class TestEngine:
             {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
         )
 
-        assert "interface Port-channel7" in result
-        assert result.count("storm-control broadcast level 1.00 0.70") == 3
-        assert result.count("storm-control multicast level 1.00 0.70") == 3
-        assert "no shutdown\n!\ninterface Port-channel7" in result
+        assert "interface Port-channel7" not in result
+        assert result.count("storm-control broadcast level 1.00 0.70") == 2
+        assert result.count("storm-control multicast level 1.00 0.70") == 2
+        assert "channel-group 7 mode active" in result
 
     def test_render_custom_storm_control_override(self):
         templates_dir = Path(__file__).resolve().parents[1] / "packs" / "default" / "templates"
@@ -163,8 +188,8 @@ class TestEngine:
             {"interfaces": interfaces, "settings": {"defaults": {"native_vlan": 1}}},
         )
 
-        assert result.count("storm-control broadcast level 1.00 0.70") == 3
-        assert result.count("storm-control multicast level 1.00 0.70") == 3
+        assert result.count("storm-control broadcast level 1.00 0.70") == 2
+        assert result.count("storm-control multicast level 1.00 0.70") == 2
         assert "storm-control broadcast level 0.10 0.07" not in result
         assert "storm-control multicast level 0.10 0.07" not in result
 

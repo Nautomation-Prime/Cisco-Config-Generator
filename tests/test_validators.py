@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from cisco_config_generator.workbook.validators import validate_intent, ValidationError
 from tests.test_workbook import make_device, make_vlan, make_intent
-from cisco_config_generator.workbook.models import ACLEntry, GlobalSettings, Interface
+from cisco_config_generator.workbook.models import ACLEntry, GlobalSettings, Interface, PortChannel
 
 HARDWARE = {
     "C9200-48P": {"access_ports": 48, "interface_prefix": "GigabitEthernet1/0/", "access_port_start": 1},
@@ -73,6 +73,19 @@ class TestValidation:
         intent = make_intent(interfaces=[iface])
         errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
         assert any("access VLAN" in e for e in errors)
+
+    def test_port_channel_requires_member(self):
+        intent = make_intent(
+            port_channels=[
+                PortChannel(
+                    device_name="SW-TEST-01",
+                    port_channel_number=7,
+                    description="Orphaned bundle",
+                )
+            ]
+        )
+        errors = validate_intent(intent, HARDWARE, UPLINK, PROFILES)
+        assert any("no member interfaces" in e for e in errors)
 
     def test_validation_error_exception(self):
         with pytest.raises(ValidationError) as exc_info:

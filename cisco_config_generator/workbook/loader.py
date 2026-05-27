@@ -8,7 +8,7 @@ from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from cisco_config_generator.workbook.models import (
-    Device, VLAN, Interface, GlobalSettings, FeatureSelection, Intent, ACLEntry
+    Device, VLAN, Interface, PortChannel, GlobalSettings, FeatureSelection, Intent, ACLEntry
 )
 
 
@@ -151,6 +151,34 @@ def _load_interfaces(ws: Worksheet, port_profiles: dict[str, Any]) -> list[Inter
     return interfaces
 
 
+def _load_port_channels(ws: Worksheet) -> list[PortChannel]:
+    headers = _header_map(ws)
+    _validate_required_headers(headers, ["device_name", "port_channel_no."], ws.title)
+    sheet = ws.title
+    port_channels: list[PortChannel] = []
+    for row in range(2, ws.max_row + 1):
+        device_name = _cell_value(ws, row, headers.get("device_name", 1))
+        if not device_name:
+            continue
+        port_channel_raw = _cell_value(ws, row, headers.get("port_channel_no.", 2))
+        port_channel_number = _parse_int_cell(port_channel_raw, "Port Channel No.", row, sheet)
+        if port_channel_number is None:
+            raise ValueError(
+                f"Sheet '{sheet}', row {row}, column 'Port Channel No.': value is required."
+            )
+        native_vlan_raw = _cell_value(ws, row, headers.get("native_vlan", 4))
+        port_channels.append(PortChannel(
+            device_name=str(device_name).strip(),
+            port_channel_number=port_channel_number,
+            description=str(_cell_value(ws, row, headers.get("description", 3))).strip(),
+            native_vlan=_parse_int_cell(native_vlan_raw, "Native VLAN", row, sheet),
+            allowed_vlans=str(_cell_value(ws, row, headers.get("allowed_vlans", 5))).strip(),
+            storm_control_broadcast=str(_cell_value(ws, row, headers.get("storm_control_broadcast", 6))).strip(),
+            storm_control_multicast=str(_cell_value(ws, row, headers.get("storm_control_multicast", 7))).strip(),
+        ))
+    return port_channels
+
+
 def _build_interface_names(prefix: str, port_start: Any, port_count: Any) -> list[str]:
     if not prefix:
         return []
@@ -171,6 +199,23 @@ def _build_unused_interface(
         interface_name=interface_name,
         port_profile="unused",
         template_hint=str(unused_profile.get("template_hint", "interfaces_unused")),
+    )
+
+
+def _build_port_channel_from_members(
+    device_name: str,
+    port_channel_number: int,
+    members: list[Interface],
+) -> PortChannel:
+    representative = members[0]
+    return PortChannel(
+        device_name=device_name,
+        port_channel_number=port_channel_number,
+        description=representative.description,
+        native_vlan=representative.native_vlan,
+        allowed_vlans=representative.allowed_vlans,
+        storm_control_broadcast=representative.storm_control_broadcast,
+        storm_control_multicast=representative.storm_control_multicast,
     )
 
 
@@ -236,6 +281,20 @@ def _expand_interfaces_from_hardware(
     return expanded
 
 
+def _derive_port_channels_from_interfaces(interfaces: list[Interface]) -> list[PortChannel]:
+    groups: dict[tuple[str, int], list[Interface]] = {}
+    for interface in interfaces:
+        if interface.port_channel_number is None:
+            continue
+        key = (interface.device_name, interface.port_channel_number)
+        groups.setdefault(key, []).append(interface)
+
+    port_channels: list[PortChannel] = []
+    for (device_name, port_channel_number), members in groups.items():
+        port_channels.append(_build_port_channel_from_members(device_name, port_channel_number, members))
+    return port_channels
+
+
 def _load_global_settings(ws: Worksheet) -> GlobalSettings:
     """Reads key-value pairs from columns A and B."""
     kv: dict[str, Any] = {}
@@ -290,6 +349,7 @@ def _load_feature_selection(ws: Worksheet) -> FeatureSelection:
         base_config=kv.get("base_config", True),
         vlans=kv.get("vlans", True),
         interfaces=kv.get("interfaces", True),
+        port_channels=kv.get("port_channels", True),
         acls=kv.get("acls", True),
         aaa=kv.get("aaa", True),
         snmp=kv.get("snmp", True),
@@ -337,6 +397,7 @@ def load_workbook(
     devices_ws = _get_sheet("devices")
     vlans_ws = _get_sheet("vlans")
     interfaces_ws = _get_sheet("interfaces")
+    port_channels_ws = _get_sheet("port channels")
     global_ws = _get_sheet("global settings")
     features_ws = _get_sheet("feature selection")
     acls_ws = _get_sheet("acls")
@@ -350,11 +411,15 @@ def load_workbook(
         uplink_modules=uplink_modules or {},
         port_profiles=port_profiles or {},
     )
+    port_channels = _load_port_channels(port_channels_ws) if port_channels_ws else []
+    if not port_channels:
+        port_channels = _derive_port_channels_from_interfaces(interfaces)
 
     return Intent(
         devices=devices,
         vlans=_load_vlans(vlans_ws) if vlans_ws else [],
         interfaces=interfaces,
+        port_channels=port_channels,
         global_settings=_load_global_settings(global_ws) if global_ws else GlobalSettings(),
         feature_selection=_load_feature_selection(features_ws) if features_ws else FeatureSelection(),
         acls=_load_acls(acls_ws) if acls_ws else [],

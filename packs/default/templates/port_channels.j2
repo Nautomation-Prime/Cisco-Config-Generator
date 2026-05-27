@@ -1,0 +1,18 @@
+! ============================================================
+! Port-Channel Configuration
+! ============================================================
+!
+{% for port_channel in port_channels %}
+interface Port-channel{{ port_channel.port_channel_number }}
+ description {{ port_channel.description if port_channel.description else '** Uplink (Port-Channel) **' }}
+ switchport mode trunk
+ switchport trunk native vlan {{ port_channel.native_vlan if port_channel.native_vlan else settings.defaults.native_vlan | default(1, true) }}
+ switchport trunk allowed vlan {{ port_channel.allowed_vlans if port_channel.allowed_vlans else 'all' }}
+ switchport nonegotiate
+ load-interval 30
+ storm-control broadcast level {{ port_channel.storm_control_broadcast if port_channel.storm_control_broadcast else '1.00 0.70' }}
+ storm-control multicast level {{ port_channel.storm_control_multicast if port_channel.storm_control_multicast else '1.00 0.70' }}
+ ip dhcp snooping trust
+ no shutdown
+!
+{% endfor %}

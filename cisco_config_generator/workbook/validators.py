@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from cisco_config_generator.workbook.models import Intent, Device, VLAN, Interface
+from cisco_config_generator.workbook.models import Intent, Device, VLAN, Interface, PortChannel
 
 
 _STORM_CONTROL_LEVEL_RE = re.compile(r"^\d+(?:\.\d+)?\s+\d+(?:\.\d+)?$")
@@ -145,6 +145,51 @@ def _validate_interfaces(
     return errors
 
 
+def _validate_port_channels(
+    port_channels: list[PortChannel],
+    vlan_ids: set[int],
+    device_names: set[str],
+    interfaces: list[Interface],
+) -> list[str]:
+    errors: list[str] = []
+    seen_keys: set[tuple[str, int]] = set()
+    interface_keys = {
+        (iface.device_name, iface.port_channel_number)
+        for iface in interfaces
+        if iface.port_channel_number is not None
+    }
+
+    for port_channel in port_channels:
+        key = (port_channel.device_name, port_channel.port_channel_number)
+        if port_channel.device_name not in device_names:
+            errors.append(
+                f"Port-channel {port_channel.port_channel_number} references unknown device '{port_channel.device_name}'."
+            )
+        if key in seen_keys:
+            errors.append(
+                f"Duplicate Port-channel {port_channel.port_channel_number} on device '{port_channel.device_name}'."
+            )
+        seen_keys.add(key)
+        if port_channel.native_vlan is not None and port_channel.native_vlan not in vlan_ids:
+            errors.append(
+                f"Port-channel {port_channel.port_channel_number} on '{port_channel.device_name}': native VLAN {port_channel.native_vlan} is not defined in the VLANs sheet."
+            )
+        if port_channel.storm_control_broadcast and not _is_valid_storm_control_level(port_channel.storm_control_broadcast):
+            errors.append(
+                f"Port-channel {port_channel.port_channel_number} on '{port_channel.device_name}': Storm Control Broadcast must contain two numeric values, for example '1.00 0.70'."
+            )
+        if port_channel.storm_control_multicast and not _is_valid_storm_control_level(port_channel.storm_control_multicast):
+            errors.append(
+                f"Port-channel {port_channel.port_channel_number} on '{port_channel.device_name}': Storm Control Multicast must contain two numeric values, for example '1.00 0.70'."
+            )
+        if key not in interface_keys:
+            errors.append(
+                f"Port-channel {port_channel.port_channel_number} on '{port_channel.device_name}' has no member interfaces referencing it."
+            )
+
+    return errors
+
+
 def _validate_global_settings(global_settings) -> list[str]:
     """Validate global settings cross-field rules. Returns error strings."""
     errors: list[str] = []
@@ -233,6 +278,7 @@ def validate_intent(
         *_validate_devices(intent.devices, hardware_catalog, uplink_modules),
         *_validate_vlans(intent.vlans),
         *_validate_interfaces(intent.interfaces, vlan_ids, device_names, port_profiles),
+        *_validate_port_channels(intent.port_channels, vlan_ids, device_names, intent.interfaces),
     ]
 
     if intent.feature_selection.base_config:
