@@ -3,7 +3,8 @@ setlocal
 
 REM ------------------------------------------------------------------------------
 REM Cisco Config Generator - First-Time Setup
-REM Copyright (c) 2026 Nautomation Prime
+REM # SPDX-License-Identifier: MIT
+REM # Copyright (c) 2026 Christopher Davies
 REM
 REM Downloads a self-contained Python embeddable runtime and installs all
 REM required packages into it. Runs automatically from run.bat when

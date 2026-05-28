@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sys
 import click
-from cisco_config_generator.__about__ import __version__, __author__
-from cisco_config_generator.logging_setup import setup_logging
+from .__about__ import __version__, __author__
+from .logging_setup import setup_logging
 
 
 @click.command()

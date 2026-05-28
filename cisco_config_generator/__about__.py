@@ -1,10 +1,18 @@
-from importlib.metadata import version as _version, PackageNotFoundError as _PackageNotFoundError
+"""Package metadata for Cisco Config Generator."""
+
+from __future__ import annotations
+
+from importlib.metadata import PackageNotFoundError, version as package_version
+
+from .version import get_version
 
 __title__ = "cisco-config-generator"
+__app_name__ = __title__
 __description__ = "Cisco IOS-XE access switch configuration generator"
-__author__ = "Nautomation Prime"
-__license__ = "Apache 2.0"
+__license__ = "MIT"
+__author__ = "Christopher Davies"
+
 try:
-    __version__ = _version("cisco-config-generator")
-except _PackageNotFoundError:
-    __version__ = "unknown"
+    __version__ = package_version(__title__)
+except PackageNotFoundError:
+    __version__ = get_version()

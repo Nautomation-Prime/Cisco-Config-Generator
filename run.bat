@@ -3,7 +3,8 @@ setlocal EnableExtensions
 
 REM ------------------------------------------------------------------------------
 REM Cisco Config Generator - Portable Launcher
-REM Copyright (c) 2026 Nautomation Prime
+REM # SPDX-License-Identifier: MIT
+REM # Copyright (c) 2026 Christopher Davies
 REM ------------------------------------------------------------------------------
 
 REM === Relaunch maximised (one-time) ============================================

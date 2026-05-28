@@ -1,3 +1,5 @@
-from cisco_config_generator.__about__ import __version__
+"""Cisco Config Generator package."""
 
-__all__ = ["__version__"]
+from .__about__ import __author__, __license__, __version__
+
+__all__ = ["__author__", "__license__", "__version__"]
