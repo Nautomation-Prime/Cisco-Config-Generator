@@ -29,6 +29,12 @@ switch_models:
     interface_prefix: "GigabitEthernet1/0/"
     access_port_start: 1
 
+  C2960X-48FPS-L:
+    description: "Catalyst 2960X 48-port PoE+"
+    access_ports: 48
+    interface_prefix: "GigabitEthernet1/0/"
+    access_port_start: 1
+
   C2960X-24PD-L:
     description: "Catalyst 2960X 24-port PoE+"
     access_ports: 24
