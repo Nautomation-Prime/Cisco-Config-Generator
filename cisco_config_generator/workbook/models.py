@@ -97,7 +97,7 @@ class GlobalSettings:
     snmp_ro_acl: str = "ACL_SNMP_RO_ACCESS"
     snmp_rw_acl: str = "ACL_SNMP_RW_ACCESS"
     # Logging / misc
-    syslog_server: str = ""
+    syslog_server: list[str] = field(default_factory=list)
     banner_motd: str = "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised."
     enable_secret: str = "changeme"
     local_username: str = ""

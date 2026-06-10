@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+# Ensure shared library is in path (required for tools in separate directories)
+try:
+    from lib.discover import ensure_lib_in_path
+    ensure_lib_in_path()
+except ImportError:
+    pass  # Library not available, continue with local imports
+
 import sys
 import click
 from .__about__ import __version__, __author__
-from .logging_setup import setup_logging
+from lib.logging_setup import setup_logging
 
 
 @click.command()

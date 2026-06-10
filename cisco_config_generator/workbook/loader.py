@@ -329,7 +329,7 @@ def _load_global_settings(ws: Worksheet) -> GlobalSettings:
         vty_acl=str(kv.get("vty_acl", "ACL_VTY_ACCESS") or "ACL_VTY_ACCESS").strip(),
         snmp_ro_acl=str(kv.get("snmp_ro_acl", "ACL_SNMP_RO_ACCESS") or "ACL_SNMP_RO_ACCESS").strip(),
         snmp_rw_acl=str(kv.get("snmp_rw_acl", "ACL_SNMP_RW_ACCESS") or "ACL_SNMP_RW_ACCESS").strip(),
-        syslog_server=_list_field(kv.get("syslog_server", "") or ""),
+        syslog_server=_list_field(kv.get("syslog_server", "")),
         banner_motd=str(kv.get("banner_motd", "") or "AUTHORISED ACCESS ONLY. Disconnect immediately if not authorised.").strip(),
         enable_secret=str(kv.get("enable_secret", "changeme") or "changeme").strip(),
         local_username=str(kv.get("local_username", "") or "").strip(),
