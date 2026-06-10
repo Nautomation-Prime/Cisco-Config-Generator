@@ -12,8 +12,10 @@ service tcp-keepalives-out
 service timestamps debug datetime msec localtime show-timezone
 service timestamps log datetime msec localtime show-timezone
 service password-encryption
+service internal
 service compress-config
 service call-home
+no platform punt-keepalive disable-kernel-core
 !
 hostname {{ device.hostname }}
 !
@@ -239,7 +241,7 @@ line vty 5 15
 !
 {% if features.ntp and global.ntp_servers %}
 {% for ntp in global.ntp_servers %}
-ntp server {{ ntp }}
+ntp peer {{ ntp }}
 {% endfor %}
 !
 {% endif %}
