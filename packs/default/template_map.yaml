@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schemas/template_map.schema.json
+# Render order for each section of a device config.
+#
+# Lower numbers are emitted first. The order below exists so the file can be
+# pasted top to bottom without forward references:
+#
+#   5  acls          - defined before base_config applies them (access-class,
+#                      snmp-server group ... access)
+#   10 vlans         - VLANs exist before base_config creates the management SVI
+#   15 base_config   - global config, management interface, lines
+#   25 port_channels - the Port-channel interface exists before its members
+#                      join it with 'channel-group'
+#   30 interfaces_*  - physical ports
+template_map:
+  acls:
+    template: acls.j2
+    order: 5
+
+  vlans:
+    template: vlans.j2
+    order: 10
+
+  base_config:
+    template: base.j2
+    order: 15
+
+  port_channels:
+    template: port_channels.j2
+    order: 25
+
+  interfaces_access:
+    template: interfaces_access.j2
+    order: 30
+
+  interfaces_trunk:
+    template: interfaces_trunk.j2
+    order: 30
+
+  interfaces_trunk_portchannel:
+    template: interfaces_trunk_portchannel.j2
+    order: 30
+
+  interfaces_ap_trunk:
+    template: interfaces_ap_trunk.j2
+    order: 30
+
+  interfaces_access_server:
+    template: interfaces_access_server.j2
+    order: 30
+
+  interfaces_trunk_server:
+    template: interfaces_trunk_server.j2
+    order: 30
+
+  interfaces_unused:
+    template: interfaces_unused.j2
+    order: 30

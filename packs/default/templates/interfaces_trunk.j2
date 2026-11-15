@@ -1,0 +1,28 @@
+{% set d = settings.defaults %}
+{% set model = device.model if device is defined else '' %}
+{% set is_iosxe = 'C92' in model or 'C93' in model %}
+! ============================================================
+! Trunk Uplink Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+{% set is_uplink_speed = iface.interface_name | starts_with_any(d.uplink_interface_prefixes) %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Uplink **' }}
+ switchport mode trunk
+ switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else d.native_vlan }}
+ switchport trunk allowed vlan {{ iface.allowed_vlans if iface.allowed_vlans else 'all' }}
+ switchport nonegotiate
+ load-interval 30
+{% if d.qos_enabled and d.qos_trust_uplinks and not is_iosxe %}
+ mls qos trust dscp
+{% endif %}
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else (d.storm_control_broadcast_uplink if is_uplink_speed else d.storm_control_broadcast) }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else (d.storm_control_multicast_uplink if is_uplink_speed else d.storm_control_multicast) }}
+{% if d.storm_control_action %}
+ storm-control action {{ d.storm_control_action }}
+{% endif %}
+ ip dhcp snooping trust
+ no shutdown
+!
+{% endfor %}

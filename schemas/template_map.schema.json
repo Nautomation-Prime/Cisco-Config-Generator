@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "TemplateEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "default": 99,
+          "title": "Order",
+          "type": "integer"
+        },
+        "template": {
+          "title": "Template",
+          "type": "string"
+        }
+      },
+      "required": [
+        "template"
+      ],
+      "title": "TemplateEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "template_map.yaml",
+  "properties": {
+    "template_map": {
+      "additionalProperties": {
+        "$ref": "#/$defs/TemplateEntry"
+      },
+      "title": "Template Map",
+      "type": "object"
+    }
+  },
+  "required": [
+    "template_map"
+  ],
+  "title": "TemplateMapFile",
+  "type": "object"
+}

@@ -1,0 +1,125 @@
+# yaml-language-server: $schema=../schemas/site.schema.json
+# ---------------------------------------------------------------------------
+# Site: Site A
+#
+# Everything here is shared by every device whose Devices sheet "Site"
+# column is "site-a" (matched case-insensitively against this file's name).
+# This is the single source of truth for that site's VLANs, ACLs, NTP/DNS,
+# AAA, SNMPv3, banner and local-admin fallback — the workbook no longer
+# carries Global Settings / VLANs / ACLs sheets.
+#
+# Copy this file to sites/<your-site>.yaml for each real site and fill in
+# your own values. See docs/RUNBOOK.md for the full field reference.
+#
+# Sample data only — clearly fictional addresses and credentials so this
+# file can be committed to source control.
+# ---------------------------------------------------------------------------
+
+domain_name: demo.nautomation.local
+
+# Device-column fallbacks: used when a device's own Timezone / Mgmt Subnet
+# cell is left blank in the workbook, before falling back further to the
+# pack's settings.yaml defaults.
+timezone: GMT
+mgmt_subnet: "255.255.255.0"
+
+ntp_servers: [10.10.0.1, 10.10.0.2]
+dns_servers: [10.10.0.10, 10.10.0.11]
+summer_time_config: "BST recurring last Sun Mar 1:00 last Sun Oct 1:00"
+
+# --- AAA ---------------------------------------------------------------
+aaa_group_name: TACACS_SERVERS
+aaa_protocol: tacacs+
+aaa_servers: [10.10.0.20, 10.10.0.21, 10.10.0.22]
+aaa_key: "EXAMPLE-tacacs-key"
+aaa_key_type: "0"                # 0 = plaintext (the switch encrypts it), 6/7 = already encrypted
+aaa_fail_message: "TACACS authentication failed - local account used."
+
+# --- SNMPv3 --------------------------------------------------------------
+snmp_auth_protocol: SHA
+snmp_priv_protocol: AES
+snmp_ro_group: SNMPv3_RO
+snmp_ro_user: snmp-ro-user
+snmp_ro_auth_password: "EXAMPLE-ro-auth-pass"
+snmp_ro_priv_password: "EXAMPLE-ro-priv-pass"
+snmp_rw_group: SNMPv3_RW
+snmp_rw_user: snmp-rw-user
+snmp_rw_auth_password: "EXAMPLE-rw-auth-pass"
+snmp_rw_priv_password: "EXAMPLE-rw-priv-pass"
+snmp_host: 10.10.0.30
+snmp_location: "Site A — Server Room"
+snmp_contact: netops@demo.nautomation.local
+
+# ACL names below must match acl_name entries in the acls: list further down.
+vty_acl: ACL_VTY_ACCESS
+snmp_ro_acl: ACL_SNMP_RO
+snmp_rw_acl: ACL_SNMP_RW
+
+syslog_server: [10.10.0.40, 10.10.0.41]
+banner_motd: |-
+  AUTHORISED ACCESS ONLY — Nautomation Demo Site.
+  Disconnect immediately if you are not authorised.
+
+enable_secret: "EXAMPLE-enable-secret"
+local_username: netadmin
+local_password: "EXAMPLE-local-password"
+
+# --- VLANs -----------------------------------------------------------------
+vlans:
+  - vlan_id: 10
+    vlan_name: MGMT
+    description: "Management VLAN"
+  - vlan_id: 20
+    vlan_name: DATA
+    description: "User Data VLAN"
+  - vlan_id: 30
+    vlan_name: VOICE
+    description: "VoIP VLAN"
+  - vlan_id: 40
+    vlan_name: WIRELESS
+    description: "Wireless Client VLAN"
+  - vlan_id: 50
+    vlan_name: PRINTERS
+    description: "Printer VLAN"
+  - vlan_id: 60
+    vlan_name: SERVERS
+    description: "Server VLAN"
+  - vlan_id: 70
+    vlan_name: CAMERAS
+    description: "IP Camera VLAN"
+  - vlan_id: 999
+    vlan_name: UNUSED
+    description: "Unused / Shutdown Ports"
+
+# --- ACLs --------------------------------------------------------------
+acls:
+  - acl_name: ACL_VTY_ACCESS
+    remark: "Management hosts"
+    action: permit
+    network: 10.10.0.0
+    wildcard: 0.0.0.255
+  - acl_name: ACL_VTY_ACCESS
+    remark: "IT admin workstations"
+    action: permit
+    network: 10.10.1.0
+    wildcard: 0.0.0.255
+  - acl_name: ACL_VTY_ACCESS
+    remark: "Deny everything else"
+    action: deny
+    network: any
+  - acl_name: ACL_SNMP_RO
+    remark: "NMS server"
+    action: permit
+    network: 10.10.0.30
+  - acl_name: ACL_SNMP_RO
+    remark: "Deny everything else"
+    action: deny
+    network: any
+  - acl_name: ACL_SNMP_RW
+    remark: "NMS server"
+    action: permit
+    network: 10.10.0.30
+  - acl_name: ACL_SNMP_RW
+    remark: "Deny everything else"
+    action: deny
+    network: any

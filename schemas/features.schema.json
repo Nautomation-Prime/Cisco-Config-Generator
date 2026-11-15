@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "FeatureEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "enabled_by_default": {
+          "default": true,
+          "title": "Enabled By Default",
+          "type": "boolean"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "FeatureEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "features.yaml",
+  "properties": {
+    "features": {
+      "items": {
+        "$ref": "#/$defs/FeatureEntry"
+      },
+      "title": "Features",
+      "type": "array"
+    }
+  },
+  "required": [
+    "features"
+  ],
+  "title": "FeaturesFile",
+  "type": "object"
+}

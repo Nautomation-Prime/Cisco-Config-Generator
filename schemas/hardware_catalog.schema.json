@@ -1,0 +1,94 @@
+{
+  "$defs": {
+    "SwitchModel": {
+      "additionalProperties": false,
+      "properties": {
+        "access_port_start": {
+          "default": 1,
+          "maximum": 1024,
+          "minimum": 0,
+          "title": "Access Port Start",
+          "type": "integer"
+        },
+        "access_ports": {
+          "maximum": 1024,
+          "minimum": 0,
+          "title": "Access Ports",
+          "type": "integer"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "interface_prefix": {
+          "title": "Interface Prefix",
+          "type": "string"
+        }
+      },
+      "required": [
+        "access_ports",
+        "interface_prefix"
+      ],
+      "title": "SwitchModel",
+      "type": "object"
+    },
+    "UplinkModule": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "interface_prefix": {
+          "default": "",
+          "title": "Interface Prefix",
+          "type": "string"
+        },
+        "uplink_port_start": {
+          "default": 1,
+          "maximum": 1024,
+          "minimum": 0,
+          "title": "Uplink Port Start",
+          "type": "integer"
+        },
+        "uplink_ports": {
+          "maximum": 1024,
+          "minimum": 0,
+          "title": "Uplink Ports",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "uplink_ports"
+      ],
+      "title": "UplinkModule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "hardware_catalog.yaml",
+  "properties": {
+    "switch_models": {
+      "additionalProperties": {
+        "$ref": "#/$defs/SwitchModel"
+      },
+      "title": "Switch Models",
+      "type": "object"
+    },
+    "uplink_modules": {
+      "additionalProperties": {
+        "$ref": "#/$defs/UplinkModule"
+      },
+      "title": "Uplink Modules",
+      "type": "object"
+    }
+  },
+  "required": [
+    "switch_models",
+    "uplink_modules"
+  ],
+  "title": "HardwareCatalogFile",
+  "type": "object"
+}

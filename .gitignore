@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+python_runtime/
+.venv/
+venv/
+ENV/
+env/
+pip-log.txt
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Project specific
+output/*
+!output/.gitkeep
+logs/*.log
+.python/
+.env
+*.xlsx
+!assets/workbook_template.xlsx
+!assets/sample_intent.xlsx
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

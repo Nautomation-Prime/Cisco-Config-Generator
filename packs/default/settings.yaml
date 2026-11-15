@@ -1,0 +1,180 @@
+# yaml-language-server: $schema=../../schemas/settings.schema.json
+schema_version: "1.1"
+log_level: INFO
+strict_validation: true
+
+# ---------------------------------------------------------------------------
+# Pack policy defaults.
+#
+# Everything here is a knob. The values shipped below are the recommended
+# starting point (Cisco hardening guidance + Catalyst access-layer practice),
+# but every one of them can be changed per pack without touching a template.
+#
+# Anything left out of this file falls back to the PackDefaults defaults in
+# cisco_config_generator/pack_schema.py, so older packs keep working. A key
+# that is not a known setting stops the pack loading - put values that only
+# your own templates read under 'custom:'.
+# ---------------------------------------------------------------------------
+defaults:
+
+  # --- VLANs ---------------------------------------------------------------
+  unused_vlan: 999
+  native_vlan: 1
+  shutdown_vlan1: true
+
+  # --- Device fallbacks (used when the workbook cell is left blank) ---------
+  timezone: GMT
+  mgmt_subnet: "255.255.255.0"
+
+  # --- Global services -----------------------------------------------------
+  # service_internal enables undocumented Cisco-internal debug commands. It is
+  # not supported for production use — leave false unless TAC has asked for it.
+  service_internal: false
+  service_call_home: false
+  service_compress_config: true
+  service_pad: false
+
+  # --- DNS -----------------------------------------------------------------
+  # domain_lookup: true emits 'ip domain lookup' (+ source-interface) and only
+  # makes sense alongside dns_servers. false emits 'no ip domain lookup', which
+  # stops mistyped commands being resolved as hostnames.
+  domain_lookup: false
+
+  # --- Logging -------------------------------------------------------------
+  logging_buffer_size: 128000
+  # "" emits 'no logging console' (recommended — console logging on a busy
+  # switch can wedge the console). Set to a level name to log to console.
+  logging_console_level: ""
+  logging_monitor_level: informational
+  logging_trap_level: informational
+  logging_source_interface: true
+
+  # --- Errdisable ----------------------------------------------------------
+  errdisable_recovery_interval: 1800
+  errdisable_recovery_causes:
+    - bpduguard
+    - storm-control
+    - udld
+    - gbic-invalid
+    - link-flap
+    - psecure-violation
+
+  # --- SSH / crypto --------------------------------------------------------
+  ssh_key_label: SEC2048
+  ssh_key_modulus: 2048
+  ssh_timeout: 15
+  ssh_version: 2
+  ssh_dh_min_size: 2048
+  # 'crypto key generate rsa' is a privileged EXEC command and is rejected in
+  # configuration mode. Left false, it is emitted as a documented pre/post-apply
+  # step in the file header instead of as a live command.
+  emit_crypto_key_command: false
+  # Leave an algorithm list empty to keep the platform default set.
+  ssh_mac_algorithms: "hmac-sha2-512 hmac-sha2-256"
+  ssh_encryption_algorithms: "aes256-ctr aes192-ctr aes128-ctr"
+  ssh_kex_algorithms: ""
+
+  # --- Credentials ---------------------------------------------------------
+  # Applied when the workbook holds a plaintext secret, letting the switch do
+  # the hashing: scrypt (type 9), sha256 (type 8) or md5 (type 5).
+  # Values that are already hashed ($9$..., $8$..., $1$...) pass through
+  # untouched with the matching type number.
+  password_hash_type: scrypt
+  local_user_privilege: 15
+
+  # --- NTP -----------------------------------------------------------------
+  # server = client mode (correct for an access switch polling upstream).
+  # peer   = symmetric active — only for mutually redundant time servers.
+  ntp_mode: server
+  ntp_source_interface: true
+
+  # --- SNMP ----------------------------------------------------------------
+  snmp_source_interface: true
+  snmp_priv_aes_key_length: 256
+
+  # --- Spanning tree -------------------------------------------------------
+  spanning_tree_mode: rapid-pvst
+  spanning_tree_portfast_bpduguard_default: true
+
+  # --- QoS -----------------------------------------------------------------
+  # Catalyst 9000 (IOS-XE) trusts DSCP by default and needs no global command.
+  # Catalyst 2960-X (IOS 15.x) needs global 'mls qos' before any interface
+  # 'mls qos trust' takes effect — and once enabled, untrusted ports remark
+  # DSCP to 0, so uplinks/trunks are trusted too (see trust_uplinks below).
+  qos_enabled: false
+  qos_trust_uplinks: true
+
+  # --- Storm control -------------------------------------------------------
+  storm_control_broadcast: "1.00 0.70"
+  storm_control_multicast: "1.00 0.70"
+  storm_control_broadcast_uplink: "0.10 0.07"
+  storm_control_multicast_uplink: "0.10 0.07"
+  # trap | shutdown | "" (filter only — the platform default).
+  # Note: 'errdisable recovery cause storm-control' only ever fires when this
+  # is set to shutdown.
+  storm_control_action: trap
+  # Interface-name prefixes treated as uplink speed for the *_uplink levels
+  # above. Add 25G/40G/100G names here rather than editing templates.
+  uplink_interface_prefixes:
+    - TenGigabit
+    - TwentyFiveGig
+    - FortyGigabit
+    - HundredGig
+
+  # --- Banners -------------------------------------------------------------
+  # The delimiter must not appear anywhere in the message text, or the switch
+  # ends the banner early and treats the rest as commands. Validation catches it.
+  banner_delimiter: "^"
+  aaa_fail_message_delimiter: "#"
+
+  # --- Lines ---------------------------------------------------------------
+  exec_timeout: "15 0"
+  vty_length: 20
+  console_stopbits: 1
+  escape_character: 3
+
+  # --- DHCP snooping -------------------------------------------------------
+  dhcp_snooping_vlans: "1-4094"
+  dhcp_snooping_information_option: false
+
+  # --- AAA method lists ----------------------------------------------------
+  # The servers, group name, protocol and key come from the workbook
+  # (Global Settings) - this block is the policy applied to them.
+  #
+  # Each method string is emitted verbatim after the command it belongs to,
+  # with {group} substituted for the workbook's aaa_group_name. Set a string
+  # to "" to omit that line entirely; set a commands list to [] to omit
+  # command authorization / accounting.
+  #
+  # Keep a fallback method (local / if-authenticated / none) on the login and
+  # command-authorization lists - without one, unreachable AAA servers lock
+  # everyone out. The pack loader refuses to load a pack that drops it.
+  aaa:
+    source_interface: true
+    authorization_console: true
+    session_id: common
+    radius_auth_port: 1812
+    radius_acct_port: 1813
+
+    prompts:
+      username: "Local-Login-Name:"
+      password: "Local-Password:"
+
+    authentication:
+      login: "group {group} local"
+      enable: "group {group} enable"
+
+    authorization:
+      exec: "group {group} local"
+      commands: [15]
+      commands_methods: "group {group} local"
+
+    accounting:
+      exec: "start-stop group {group}"
+      commands: [15]
+      commands_methods: "start-stop group {group}"
+
+    # Applied when AAA is on but the workbook defines no servers.
+    local_only:
+      login: "local"
+      exec: "local if-authenticated"

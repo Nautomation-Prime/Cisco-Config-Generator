@@ -1,0 +1,35 @@
+{% set d = settings.defaults %}
+{% set model = device.model if device is defined else '' %}
+{% set is_iosxe = 'C92' in model or 'C93' in model %}
+! ============================================================
+! Access Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Access Port **' }}
+ switchport mode access
+ switchport access vlan {{ iface.access_vlan }}
+{% if iface.voice_vlan %}
+ switchport voice vlan {{ iface.voice_vlan }}
+{% endif %}
+ switchport nonegotiate
+ load-interval 30
+{% if iface.qos_trust_dscp %}
+{% if is_iosxe %}
+ auto qos trust dscp
+{% elif d.qos_enabled %}
+ mls qos trust dscp
+{% endif %}
+{% endif %}
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else d.storm_control_broadcast }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else d.storm_control_multicast }}
+{% if d.storm_control_action %}
+ storm-control action {{ d.storm_control_action }}
+{% endif %}
+ spanning-tree portfast
+ spanning-tree guard root
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endfor %}

@@ -1,0 +1,23 @@
+{% set d = settings.defaults %}
+! ============================================================
+! Server Access Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Server Access **' }}
+ switchport mode access
+ switchport access vlan {{ iface.access_vlan }}
+ switchport nonegotiate
+ load-interval 30
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else d.storm_control_broadcast }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else d.storm_control_multicast }}
+{% if d.storm_control_action %}
+ storm-control action {{ d.storm_control_action }}
+{% endif %}
+ spanning-tree portfast
+ spanning-tree guard root
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endfor %}

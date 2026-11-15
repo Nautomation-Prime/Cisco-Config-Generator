@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "PortProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "qos_trust_dscp": {
+          "default": false,
+          "title": "Qos Trust Dscp",
+          "type": "boolean"
+        },
+        "requires_native_vlan": {
+          "default": false,
+          "title": "Requires Native Vlan",
+          "type": "boolean"
+        },
+        "requires_port_channel": {
+          "default": false,
+          "title": "Requires Port Channel",
+          "type": "boolean"
+        },
+        "requires_vlan": {
+          "default": false,
+          "title": "Requires Vlan",
+          "type": "boolean"
+        },
+        "requires_voice_vlan": {
+          "default": false,
+          "title": "Requires Voice Vlan",
+          "type": "boolean"
+        },
+        "template_hint": {
+          "title": "Template Hint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "template_hint"
+      ],
+      "title": "PortProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "port_profiles.yaml",
+  "properties": {
+    "profiles": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PortProfile"
+      },
+      "title": "Profiles",
+      "type": "object"
+    }
+  },
+  "required": [
+    "profiles"
+  ],
+  "title": "PortProfilesFile",
+  "type": "object"
+}

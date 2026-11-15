@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../schemas/features.schema.json
+# The single source of truth for the Feature Selection sheet.
+# scripts/generate_workbook.py builds that sheet from this file, in this order.
+features:
+  - name: base_config
+    description: "Base switch config — hostname, SSH hardening, management interface, IP routing off"
+    enabled_by_default: true
+
+  - name: aaa
+    description: "AAA — aaa new-model, TACACS+ group, authentication and authorisation commands"
+    enabled_by_default: true
+
+  - name: snmp
+    description: "SNMPv3 — groups, users, host, location and contact (requires SNMPv3 credentials in Global Settings)"
+    enabled_by_default: true
+
+  - name: ntp
+    description: "NTP server configuration (requires NTP servers in Global Settings)"
+    enabled_by_default: true
+
+  - name: dhcp_snooping
+    description: "DHCP snooping — enabled globally across all VLANs"
+    enabled_by_default: true
+
+  - name: spanning_tree
+    description: "Spanning tree — mode rapid-pvst, extend system-id, portfast BPDUguard default"
+    enabled_by_default: true
+
+  - name: banner
+    description: "Banner MOTD"
+    enabled_by_default: true
+
+  - name: vlans
+    description: "VLAN definitions"
+    enabled_by_default: true
+
+  - name: interfaces
+    description: "Interface config — access, trunk, and unused ports"
+    enabled_by_default: true
+
+  - name: port_channels
+    description: "Logical Port-channel interfaces"
+    enabled_by_default: true
+
+  - name: acls
+    description: "IP access control lists — VTY and SNMP access restriction"
+    enabled_by_default: true

@@ -1,0 +1,24 @@
+{% set d = settings.defaults %}
+! ============================================================
+! Server Trunk Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+interface {{ iface.interface_name }}
+ description {{ iface.description if iface.description else '** Server Trunk **' }}
+ switchport mode trunk
+ switchport trunk native vlan {{ iface.native_vlan if iface.native_vlan else d.native_vlan }}
+ switchport trunk allowed vlan {{ iface.allowed_vlans if iface.allowed_vlans else 'all' }}
+ switchport nonegotiate
+ load-interval 30
+ storm-control broadcast level {{ iface.storm_control_broadcast if iface.storm_control_broadcast else d.storm_control_broadcast }}
+ storm-control multicast level {{ iface.storm_control_multicast if iface.storm_control_multicast else d.storm_control_multicast }}
+{% if d.storm_control_action %}
+ storm-control action {{ d.storm_control_action }}
+{% endif %}
+ spanning-tree portfast trunk
+ spanning-tree guard root
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endfor %}

@@ -1,0 +1,598 @@
+{
+  "$defs": {
+    "AaaAccounting": {
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "items": {
+            "maximum": 15,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Commands",
+          "type": "array"
+        },
+        "commands_methods": {
+          "default": "start-stop group {group}",
+          "title": "Commands Methods",
+          "type": "string"
+        },
+        "exec": {
+          "default": "start-stop group {group}",
+          "title": "Exec",
+          "type": "string"
+        }
+      },
+      "title": "AaaAccounting",
+      "type": "object"
+    },
+    "AaaAuthentication": {
+      "additionalProperties": false,
+      "properties": {
+        "enable": {
+          "default": "group {group} enable",
+          "title": "Enable",
+          "type": "string"
+        },
+        "login": {
+          "default": "group {group} local",
+          "title": "Login",
+          "type": "string"
+        }
+      },
+      "title": "AaaAuthentication",
+      "type": "object"
+    },
+    "AaaAuthorization": {
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "items": {
+            "maximum": 15,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Commands",
+          "type": "array"
+        },
+        "commands_methods": {
+          "default": "group {group} local",
+          "title": "Commands Methods",
+          "type": "string"
+        },
+        "exec": {
+          "default": "group {group} local",
+          "title": "Exec",
+          "type": "string"
+        }
+      },
+      "title": "AaaAuthorization",
+      "type": "object"
+    },
+    "AaaLocalOnly": {
+      "additionalProperties": false,
+      "description": "Method lists used when AAA is on but the workbook defines no server group.",
+      "properties": {
+        "exec": {
+          "default": "local if-authenticated",
+          "title": "Exec",
+          "type": "string"
+        },
+        "login": {
+          "default": "local",
+          "title": "Login",
+          "type": "string"
+        }
+      },
+      "title": "AaaLocalOnly",
+      "type": "object"
+    },
+    "AaaPolicy": {
+      "additionalProperties": false,
+      "description": "AAA method-list policy.\n\nEach method string is emitted verbatim after the command it belongs to,\nwith {group} replaced by the server-group name from the workbook. An empty\nstring omits that line; an empty commands list omits command\nauthorization/accounting entirely.",
+      "properties": {
+        "accounting": {
+          "$ref": "#/$defs/AaaAccounting"
+        },
+        "authentication": {
+          "$ref": "#/$defs/AaaAuthentication"
+        },
+        "authorization": {
+          "$ref": "#/$defs/AaaAuthorization"
+        },
+        "authorization_console": {
+          "default": true,
+          "title": "Authorization Console",
+          "type": "boolean"
+        },
+        "local_only": {
+          "$ref": "#/$defs/AaaLocalOnly"
+        },
+        "prompts": {
+          "$ref": "#/$defs/AaaPrompts"
+        },
+        "radius_acct_port": {
+          "default": 1813,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Radius Acct Port",
+          "type": "integer"
+        },
+        "radius_auth_port": {
+          "default": 1812,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Radius Auth Port",
+          "type": "integer"
+        },
+        "session_id": {
+          "default": "common",
+          "enum": [
+            "common",
+            "unique"
+          ],
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source_interface": {
+          "default": true,
+          "title": "Source Interface",
+          "type": "boolean"
+        }
+      },
+      "title": "AaaPolicy",
+      "type": "object"
+    },
+    "AaaPrompts": {
+      "additionalProperties": false,
+      "properties": {
+        "password": {
+          "default": "Local-Password:",
+          "title": "Password",
+          "type": "string"
+        },
+        "username": {
+          "default": "Local-Login-Name:",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "title": "AaaPrompts",
+      "type": "object"
+    },
+    "PackDefaults": {
+      "additionalProperties": false,
+      "description": "Every policy knob the templates read as settings.defaults.<key>.",
+      "properties": {
+        "aaa": {
+          "$ref": "#/$defs/AaaPolicy"
+        },
+        "aaa_fail_message_delimiter": {
+          "default": "#",
+          "title": "Aaa Fail Message Delimiter",
+          "type": "string"
+        },
+        "banner_delimiter": {
+          "default": "^",
+          "title": "Banner Delimiter",
+          "type": "string"
+        },
+        "console_stopbits": {
+          "default": 1,
+          "enum": [
+            1,
+            1.5,
+            2
+          ],
+          "title": "Console Stopbits"
+        },
+        "custom": {
+          "additionalProperties": true,
+          "title": "Custom",
+          "type": "object"
+        },
+        "dhcp_snooping_information_option": {
+          "default": false,
+          "title": "Dhcp Snooping Information Option",
+          "type": "boolean"
+        },
+        "dhcp_snooping_vlans": {
+          "default": "1-4094",
+          "title": "Dhcp Snooping Vlans",
+          "type": "string"
+        },
+        "domain_lookup": {
+          "default": false,
+          "title": "Domain Lookup",
+          "type": "boolean"
+        },
+        "emit_crypto_key_command": {
+          "default": false,
+          "title": "Emit Crypto Key Command",
+          "type": "boolean"
+        },
+        "errdisable_recovery_causes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Errdisable Recovery Causes",
+          "type": "array"
+        },
+        "errdisable_recovery_interval": {
+          "default": 1800,
+          "maximum": 86400,
+          "minimum": 30,
+          "title": "Errdisable Recovery Interval",
+          "type": "integer"
+        },
+        "escape_character": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": 3,
+          "title": "Escape Character"
+        },
+        "exec_timeout": {
+          "default": "15 0",
+          "pattern": "^\\d+(\\s+\\d+)?$",
+          "title": "Exec Timeout",
+          "type": "string"
+        },
+        "local_user_privilege": {
+          "default": 15,
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Local User Privilege",
+          "type": "integer"
+        },
+        "logging_buffer_size": {
+          "default": 128000,
+          "maximum": 2147483647,
+          "minimum": 4096,
+          "title": "Logging Buffer Size",
+          "type": "integer"
+        },
+        "logging_console_level": {
+          "anyOf": [
+            {
+              "enum": [
+                "emergencies",
+                "alerts",
+                "critical",
+                "errors",
+                "warnings",
+                "notifications",
+                "informational",
+                "debugging"
+              ],
+              "type": "string"
+            },
+            {
+              "maximum": 7,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "const": "",
+              "type": "string"
+            }
+          ],
+          "default": "",
+          "title": "Logging Console Level"
+        },
+        "logging_monitor_level": {
+          "anyOf": [
+            {
+              "enum": [
+                "emergencies",
+                "alerts",
+                "critical",
+                "errors",
+                "warnings",
+                "notifications",
+                "informational",
+                "debugging"
+              ],
+              "type": "string"
+            },
+            {
+              "maximum": 7,
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "default": "informational",
+          "title": "Logging Monitor Level"
+        },
+        "logging_source_interface": {
+          "default": true,
+          "title": "Logging Source Interface",
+          "type": "boolean"
+        },
+        "logging_trap_level": {
+          "anyOf": [
+            {
+              "enum": [
+                "emergencies",
+                "alerts",
+                "critical",
+                "errors",
+                "warnings",
+                "notifications",
+                "informational",
+                "debugging"
+              ],
+              "type": "string"
+            },
+            {
+              "maximum": 7,
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "default": "informational",
+          "title": "Logging Trap Level"
+        },
+        "mgmt_subnet": {
+          "default": "255.255.255.0",
+          "title": "Mgmt Subnet",
+          "type": "string"
+        },
+        "native_vlan": {
+          "default": 1,
+          "maximum": 4094,
+          "minimum": 1,
+          "title": "Native Vlan",
+          "type": "integer"
+        },
+        "ntp_mode": {
+          "default": "server",
+          "enum": [
+            "server",
+            "peer"
+          ],
+          "title": "Ntp Mode",
+          "type": "string"
+        },
+        "ntp_source_interface": {
+          "default": true,
+          "title": "Ntp Source Interface",
+          "type": "boolean"
+        },
+        "password_hash_type": {
+          "default": "scrypt",
+          "enum": [
+            "scrypt",
+            "sha256",
+            "md5"
+          ],
+          "title": "Password Hash Type",
+          "type": "string"
+        },
+        "qos_enabled": {
+          "default": false,
+          "title": "Qos Enabled",
+          "type": "boolean"
+        },
+        "qos_trust_uplinks": {
+          "default": true,
+          "title": "Qos Trust Uplinks",
+          "type": "boolean"
+        },
+        "service_call_home": {
+          "default": false,
+          "title": "Service Call Home",
+          "type": "boolean"
+        },
+        "service_compress_config": {
+          "default": true,
+          "title": "Service Compress Config",
+          "type": "boolean"
+        },
+        "service_internal": {
+          "default": false,
+          "title": "Service Internal",
+          "type": "boolean"
+        },
+        "service_pad": {
+          "default": false,
+          "title": "Service Pad",
+          "type": "boolean"
+        },
+        "shutdown_vlan1": {
+          "default": true,
+          "title": "Shutdown Vlan1",
+          "type": "boolean"
+        },
+        "snmp_priv_aes_key_length": {
+          "default": 256,
+          "enum": [
+            128,
+            192,
+            256
+          ],
+          "title": "Snmp Priv Aes Key Length",
+          "type": "integer"
+        },
+        "snmp_source_interface": {
+          "default": true,
+          "title": "Snmp Source Interface",
+          "type": "boolean"
+        },
+        "spanning_tree_mode": {
+          "default": "rapid-pvst",
+          "enum": [
+            "rapid-pvst",
+            "pvst",
+            "mst"
+          ],
+          "title": "Spanning Tree Mode",
+          "type": "string"
+        },
+        "spanning_tree_portfast_bpduguard_default": {
+          "default": true,
+          "title": "Spanning Tree Portfast Bpduguard Default",
+          "type": "boolean"
+        },
+        "ssh_dh_min_size": {
+          "default": 2048,
+          "enum": [
+            1024,
+            2048,
+            4096
+          ],
+          "title": "Ssh Dh Min Size",
+          "type": "integer"
+        },
+        "ssh_encryption_algorithms": {
+          "default": "aes256-ctr aes192-ctr aes128-ctr",
+          "title": "Ssh Encryption Algorithms",
+          "type": "string"
+        },
+        "ssh_kex_algorithms": {
+          "default": "",
+          "title": "Ssh Kex Algorithms",
+          "type": "string"
+        },
+        "ssh_key_label": {
+          "default": "SEC2048",
+          "title": "Ssh Key Label",
+          "type": "string"
+        },
+        "ssh_key_modulus": {
+          "default": 2048,
+          "maximum": 4096,
+          "minimum": 512,
+          "title": "Ssh Key Modulus",
+          "type": "integer"
+        },
+        "ssh_mac_algorithms": {
+          "default": "hmac-sha2-512 hmac-sha2-256",
+          "title": "Ssh Mac Algorithms",
+          "type": "string"
+        },
+        "ssh_timeout": {
+          "default": 15,
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Ssh Timeout",
+          "type": "integer"
+        },
+        "ssh_version": {
+          "default": 2,
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Ssh Version",
+          "type": "integer"
+        },
+        "storm_control_action": {
+          "default": "trap",
+          "enum": [
+            "trap",
+            "shutdown",
+            ""
+          ],
+          "title": "Storm Control Action",
+          "type": "string"
+        },
+        "storm_control_broadcast": {
+          "default": "1.00 0.70",
+          "pattern": "^\\d+(?:\\.\\d+)?\\s+\\d+(?:\\.\\d+)?$",
+          "title": "Storm Control Broadcast",
+          "type": "string"
+        },
+        "storm_control_broadcast_uplink": {
+          "default": "0.10 0.07",
+          "pattern": "^\\d+(?:\\.\\d+)?\\s+\\d+(?:\\.\\d+)?$",
+          "title": "Storm Control Broadcast Uplink",
+          "type": "string"
+        },
+        "storm_control_multicast": {
+          "default": "1.00 0.70",
+          "pattern": "^\\d+(?:\\.\\d+)?\\s+\\d+(?:\\.\\d+)?$",
+          "title": "Storm Control Multicast",
+          "type": "string"
+        },
+        "storm_control_multicast_uplink": {
+          "default": "0.10 0.07",
+          "pattern": "^\\d+(?:\\.\\d+)?\\s+\\d+(?:\\.\\d+)?$",
+          "title": "Storm Control Multicast Uplink",
+          "type": "string"
+        },
+        "timezone": {
+          "default": "GMT",
+          "title": "Timezone",
+          "type": "string"
+        },
+        "unused_vlan": {
+          "default": 999,
+          "maximum": 4094,
+          "minimum": 1,
+          "title": "Unused Vlan",
+          "type": "integer"
+        },
+        "uplink_interface_prefixes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uplink Interface Prefixes",
+          "type": "array"
+        },
+        "vty_length": {
+          "default": 20,
+          "maximum": 512,
+          "minimum": 0,
+          "title": "Vty Length",
+          "type": "integer"
+        }
+      },
+      "title": "PackDefaults",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "settings.yaml",
+  "properties": {
+    "defaults": {
+      "$ref": "#/$defs/PackDefaults"
+    },
+    "log_level": {
+      "default": "INFO",
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+      ],
+      "title": "Log Level",
+      "type": "string"
+    },
+    "schema_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Schema Version"
+    },
+    "strict_validation": {
+      "default": true,
+      "title": "Strict Validation",
+      "type": "boolean"
+    }
+  },
+  "title": "SettingsFile",
+  "type": "object"
+}

@@ -1,0 +1,27 @@
+{% set d = settings.defaults %}
+{% set model = device.model if device is defined else '' %}
+{% set is_iosxe = 'C92' in model or 'C93' in model %}
+! ============================================================
+! Port-Channel Configuration
+! ============================================================
+!
+{% for port_channel in port_channels %}
+interface Port-channel{{ port_channel.port_channel_number }}
+ description {{ port_channel.description if port_channel.description else '** Uplink (Port-Channel) **' }}
+ switchport mode trunk
+ switchport trunk native vlan {{ port_channel.native_vlan if port_channel.native_vlan else d.native_vlan }}
+ switchport trunk allowed vlan {{ port_channel.allowed_vlans if port_channel.allowed_vlans else 'all' }}
+ switchport nonegotiate
+ load-interval 30
+{% if d.qos_enabled and d.qos_trust_uplinks and not is_iosxe %}
+ mls qos trust dscp
+{% endif %}
+ storm-control broadcast level {{ port_channel.storm_control_broadcast if port_channel.storm_control_broadcast else d.storm_control_broadcast }}
+ storm-control multicast level {{ port_channel.storm_control_multicast if port_channel.storm_control_multicast else d.storm_control_multicast }}
+{% if d.storm_control_action %}
+ storm-control action {{ d.storm_control_action }}
+{% endif %}
+ ip dhcp snooping trust
+ no shutdown
+!
+{% endfor %}

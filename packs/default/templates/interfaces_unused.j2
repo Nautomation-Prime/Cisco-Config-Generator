@@ -1,0 +1,14 @@
+{% set d = settings.defaults %}
+! ============================================================
+! Unused Port Configuration
+! ============================================================
+!
+{% for iface in interfaces %}
+default interface {{ iface.interface_name }}
+interface {{ iface.interface_name }}
+ description * unused *
+ switchport mode access
+ switchport access vlan {{ d.unused_vlan }}
+ shutdown
+!
+{% endfor %}
